@@ -6,6 +6,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import Login from "../pages/auth/Login";
+import Signup from "../pages/auth/Signup";
 import Dashboard from "../pages/dashboard/Dashboard";
 import InwardSupply from "../pages/inward/InwardSupply";
 import ProductionRecord from "../pages/production/ProductionRecord";
@@ -27,6 +28,7 @@ function AppRoutes() {
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
       </Route>
 
       <Route
