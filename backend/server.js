@@ -21,10 +21,11 @@ connectDB();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://factory-flow-git-main-teamanoop.vercel.app",
-    ],
+  origin: [
+  "http://localhost:5173",
+  "https://factory-flow-git-main-teamanoop.vercel.app",
+  "https://factoryflow.anoopautomations.com",
+],
     credentials: true,
   }),
 );
