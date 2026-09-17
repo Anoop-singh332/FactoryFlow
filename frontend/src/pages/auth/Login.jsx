@@ -35,23 +35,20 @@ function Login() {
     });
   };
 
-const handleSubmit = async (event) => {
-  event.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-  setError("");
+    setError("");
 
-  const result = await login(
-    form.email,
-    form.password
-  );
+    const result = await login(form.email, form.password);
 
-  if (!result.success) {
-    setError(result.message);
-    return;
-  }
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
 
-  navigate("/dashboard");
-};
+    navigate("/dashboard");
+  };
 
   return (
     <div className="ff-grid relative min-h-screen overflow-hidden">

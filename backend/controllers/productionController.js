@@ -1,9 +1,6 @@
 const Production = require("../models/Production");
 
-// =========================
-// CREATE PRODUCTION
-// =========================
-
+// Create production
 const createProduction = async (req, res) => {
   try {
     const {
@@ -66,10 +63,7 @@ const createProduction = async (req, res) => {
   }
 };
 
-// =========================
-// GET ALL PRODUCTION
-// =========================
-
+// Get all production
 const getProductions = async (req, res) => {
   try {
     const productions =
@@ -102,10 +96,7 @@ const getProductions = async (req, res) => {
   }
 };
 
-// =========================
-// GET SINGLE PRODUCTION
-// =========================
-
+// Get single production
 const getProduction = async (req, res) => {
   try {
     const production =
@@ -143,10 +134,7 @@ const getProduction = async (req, res) => {
   }
 };
 
-// =========================
-// UPDATE PRODUCTION
-// =========================
-
+// Update production
 const updateProduction = async (req, res) => {
   try {
     const {
@@ -243,10 +231,7 @@ const updateProduction = async (req, res) => {
   }
 };
 
-// =========================
-// DELETE PRODUCTION
-// =========================
-
+// Delete production
 const deleteProduction = async (req, res) => {
   try {
     const production =

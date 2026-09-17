@@ -70,36 +70,24 @@ function Dispatch() {
 
       const token = getToken();
 
-      const response = await fetch(
-        `${API_URL}/dispatch`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/dispatch`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to fetch dispatch records."
-        );
+        throw new Error(data.message || "Failed to fetch dispatch records.");
       }
 
       setDispatches(data.data || []);
     } catch (err) {
-      console.error(
-        "Fetch Dispatches Error:",
-        err
-      );
+      console.error("Fetch Dispatches Error:", err);
 
-      setError(
-        err.message ||
-          "Unable to load dispatch records."
-      );
+      setError(err.message || "Unable to load dispatch records.");
     } finally {
       setFetching(false);
     }
@@ -129,11 +117,7 @@ function Dispatch() {
   // ITEM CHANGE
   // =========================
 
-  const handleItemChange = (
-    index,
-    field,
-    value
-  ) => {
+  const handleItemChange = (index, field, value) => {
     setForm((prev) => {
       const updatedItems = [...prev.items];
 
@@ -179,10 +163,7 @@ function Dispatch() {
 
     setForm((prev) => ({
       ...prev,
-      items: prev.items.filter(
-        (_, itemIndex) =>
-          itemIndex !== index
-      ),
+      items: prev.items.filter((_, itemIndex) => itemIndex !== index),
     }));
   };
 
@@ -251,22 +232,13 @@ function Dispatch() {
       return "At least one item is required.";
     }
 
-    for (
-      let i = 0;
-      i < form.items.length;
-      i++
-    ) {
+    for (let i = 0; i < form.items.length; i++) {
       if (!form.items[i].itemName) {
         return `Please select item ${i + 1}.`;
       }
 
-      if (
-        !form.items[i].quantity ||
-        Number(form.items[i].quantity) < 1
-      ) {
-        return `Please enter a valid quantity for item ${
-          i + 1
-        }.`;
+      if (!form.items[i].quantity || Number(form.items[i].quantity) < 1) {
+        return `Please enter a valid quantity for item ${i + 1}.`;
       }
     }
 
@@ -283,8 +255,7 @@ function Dispatch() {
     setSuccess("");
     setError("");
 
-    const validationError =
-      validateForm();
+    const validationError = validateForm();
 
     if (validationError) {
       setError(validationError);
@@ -297,84 +268,62 @@ function Dispatch() {
       const token = getToken();
 
       const payload = {
-        inspectionReport:
-          form.inspectionReport.trim(),
+        inspectionReport: form.inspectionReport.trim(),
 
         items: form.items.map((item) => ({
           itemName: item.itemName,
           quantity: Number(item.quantity),
         })),
 
-        vendorName:
-          form.vendorName.trim(),
+        vendorName: form.vendorName.trim(),
 
-        qualityResult:
-          form.qualityResult,
+        qualityResult: form.qualityResult,
 
-        invoiceNumber:
-          form.invoiceNumber.trim(),
+        invoiceNumber: form.invoiceNumber.trim(),
 
-        eWayBillNumber:
-          form.eWayBillNumber.trim(),
+        eWayBillNumber: form.eWayBillNumber.trim(),
 
         weight: Number(form.weight),
 
-        numberOfBags:
-          Number(form.numberOfBags),
+        numberOfBags: Number(form.numberOfBags),
 
-        deliveryChallan:
-          form.deliveryChallan.trim(),
+        deliveryChallan: form.deliveryChallan.trim(),
       };
 
       const url = editingId
         ? `${API_URL}/dispatch/${editingId}`
         : `${API_URL}/dispatch`;
 
-      const method = editingId
-        ? "PUT"
-        : "POST";
+      const method = editingId ? "PUT" : "POST";
 
-      const response = await fetch(
-        url,
-        {
-          method,
-          headers: {
-            "Content-Type":
-              "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to save dispatch."
-        );
+        throw new Error(data.message || "Failed to save dispatch.");
       }
 
       setSuccess(
         editingId
           ? "Dispatch updated successfully."
-          : "Dispatch created successfully."
+          : "Dispatch created successfully.",
       );
 
       resetForm();
 
       await fetchDispatches();
     } catch (err) {
-      console.error(
-        "Save Dispatch Error:",
-        err
-      );
+      console.error("Save Dispatch Error:", err);
 
-      setError(
-        err.message ||
-          "Unable to save dispatch."
-      );
+      setError(err.message || "Unable to save dispatch.");
     } finally {
       setLoading(false);
     }
@@ -388,42 +337,29 @@ function Dispatch() {
     setEditingId(dispatch._id);
 
     setForm({
-      inspectionReport:
-        dispatch.inspectionReport || "",
+      inspectionReport: dispatch.inspectionReport || "",
 
       items:
         dispatch.items?.length > 0
-          ? dispatch.items.map(
-              (item) => ({
-                itemName:
-                  item.itemName || "",
-                quantity:
-                  item.quantity || "",
-              })
-            )
+          ? dispatch.items.map((item) => ({
+              itemName: item.itemName || "",
+              quantity: item.quantity || "",
+            }))
           : [{ ...emptyItem }],
 
-      vendorName:
-        dispatch.vendorName || "",
+      vendorName: dispatch.vendorName || "",
 
-      qualityResult:
-        dispatch.qualityResult ||
-        "Passed",
+      qualityResult: dispatch.qualityResult || "Passed",
 
-      invoiceNumber:
-        dispatch.invoiceNumber || "",
+      invoiceNumber: dispatch.invoiceNumber || "",
 
-      eWayBillNumber:
-        dispatch.eWayBillNumber || "",
+      eWayBillNumber: dispatch.eWayBillNumber || "",
 
-      weight:
-        dispatch.weight ?? "",
+      weight: dispatch.weight ?? "",
 
-      numberOfBags:
-        dispatch.numberOfBags ?? "",
+      numberOfBags: dispatch.numberOfBags ?? "",
 
-      deliveryChallan:
-        dispatch.deliveryChallan || "",
+      deliveryChallan: dispatch.deliveryChallan || "",
     });
 
     setSuccess("");
@@ -441,7 +377,7 @@ function Dispatch() {
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this dispatch?"
+      "Are you sure you want to delete this dispatch?",
     );
 
     if (!confirmed) {
@@ -455,28 +391,20 @@ function Dispatch() {
 
       const token = getToken();
 
-      const response = await fetch(
-        `${API_URL}/dispatch/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/dispatch/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to delete dispatch."
-        );
+        throw new Error(data.message || "Failed to delete dispatch.");
       }
 
-      setSuccess(
-        "Dispatch deleted successfully."
-      );
+      setSuccess("Dispatch deleted successfully.");
 
       if (editingId === id) {
         resetForm();
@@ -484,15 +412,9 @@ function Dispatch() {
 
       await fetchDispatches();
     } catch (err) {
-      console.error(
-        "Delete Dispatch Error:",
-        err
-      );
+      console.error("Delete Dispatch Error:", err);
 
-      setError(
-        err.message ||
-          "Unable to delete dispatch."
-      );
+      setError(err.message || "Unable to delete dispatch.");
     } finally {
       setDeletingId(null);
     }
@@ -503,73 +425,44 @@ function Dispatch() {
   // =========================
 
   const filteredDispatches = useMemo(() => {
-    const searchValue = search
-      .trim()
-      .toLowerCase();
+    const searchValue = search.trim().toLowerCase();
 
     if (!searchValue) {
       return dispatches;
     }
 
-    return dispatches.filter(
-      (dispatch) => {
-        const itemsText =
-          dispatch.items
-            ?.map(
-              (item) =>
-                item.itemName
-            )
-            .join(" ") || "";
+    return dispatches.filter((dispatch) => {
+      const itemsText =
+        dispatch.items?.map((item) => item.itemName).join(" ") || "";
 
-        return (
-          dispatch.inspectionReport
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          dispatch.vendorName
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          dispatch.invoiceNumber
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          dispatch.qualityResult
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          itemsText
-            .toLowerCase()
-            .includes(searchValue)
-        );
-      }
-    );
+      return (
+        dispatch.inspectionReport?.toLowerCase().includes(searchValue) ||
+        dispatch.vendorName?.toLowerCase().includes(searchValue) ||
+        dispatch.invoiceNumber?.toLowerCase().includes(searchValue) ||
+        dispatch.qualityResult?.toLowerCase().includes(searchValue) ||
+        itemsText.toLowerCase().includes(searchValue)
+      );
+    });
   }, [dispatches, search]);
 
   // =========================
   // STATISTICS
   // =========================
 
-  const totalDispatches =
-    dispatches.length;
+  const totalDispatches = dispatches.length;
 
-  const passedDispatches =
-    dispatches.filter(
-      (dispatch) =>
-        dispatch.qualityResult ===
-        "Passed"
-    ).length;
+  const passedDispatches = dispatches.filter(
+    (dispatch) => dispatch.qualityResult === "Passed",
+  ).length;
 
-  const failedDispatches =
-    dispatches.filter(
-      (dispatch) =>
-        dispatch.qualityResult ===
-        "Failed"
-    ).length;
+  const failedDispatches = dispatches.filter(
+    (dispatch) => dispatch.qualityResult === "Failed",
+  ).length;
 
-  const totalWeight =
-    dispatches.reduce(
-      (total, dispatch) =>
-        total +
-        Number(dispatch.weight || 0),
-      0
-    );
+  const totalWeight = dispatches.reduce(
+    (total, dispatch) => total + Number(dispatch.weight || 0),
+    0,
+  );
 
   // =========================
   // FORMAT DATE
@@ -580,25 +473,18 @@ function Dispatch() {
       return "-";
     }
 
-    return new Date(
-      date
-    ).toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   // =========================
   // QUALITY STYLE
   // =========================
 
-  const getQualityClasses = (
-    quality
-  ) => {
+  const getQualityClasses = (quality) => {
     switch (quality) {
       case "Passed":
         return "border-lime-300/20 bg-lime-300/10 text-lime-300";
@@ -708,9 +594,7 @@ function Dispatch() {
         <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-5">
           <div>
             <p className="text-sm font-semibold text-white">
-              {editingId
-                ? "Edit Dispatch"
-                : "Dispatch Details"}
+              {editingId ? "Edit Dispatch" : "Dispatch Details"}
             </p>
 
             <p className="mt-1 text-xs text-white/35">
@@ -737,9 +621,7 @@ function Dispatch() {
           <Input
             label="Quality Inspection Report"
             name="inspectionReport"
-            value={
-              form.inspectionReport
-            }
+            value={form.inspectionReport}
             onChange={handleChange}
             placeholder="QIR-2026-001"
             required
@@ -782,9 +664,7 @@ function Dispatch() {
           <Input
             label="Invoice Number"
             name="invoiceNumber"
-            value={
-              form.invoiceNumber
-            }
+            value={form.invoiceNumber}
             onChange={handleChange}
             placeholder="INV-2026-001"
             required
@@ -798,9 +678,7 @@ function Dispatch() {
         <div className="mt-8">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-white">
-                Dispatch Items
-              </p>
+              <p className="text-sm font-semibold text-white">Dispatch Items</p>
 
               <p className="mt-1 text-xs text-white/35">
                 Add one or more items included in this dispatch.
@@ -818,95 +696,54 @@ function Dispatch() {
           </div>
 
           <div className="space-y-3">
-            {form.items.map(
-              (item, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-black/10 p-3 sm:grid-cols-[1fr_180px_auto]"
-                >
-                  <Select
-                    label={`Item ${
-                      index + 1
-                    }`}
-                    value={
-                      item.itemName
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      handleItemChange(
-                        index,
-                        "itemName",
-                        event.target
-                          .value
-                      )
-                    }
-                    options={[
-                      {
-                        label:
-                          "Select item",
-                        value: "",
-                      },
-                      ...items.map(
-                        (product) => ({
-                          label:
-                            product.name ||
-                            product.itemName ||
-                            product,
-                          value:
-                            product.name ||
-                            product.itemName ||
-                            product,
-                        })
-                      ),
-                    ]}
-                  />
+            {form.items.map((item, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-black/10 p-3 sm:grid-cols-[1fr_180px_auto]"
+              >
+                <Select
+                  label={`Item ${index + 1}`}
+                  value={item.itemName}
+                  onChange={(event) =>
+                    handleItemChange(index, "itemName", event.target.value)
+                  }
+                  options={[
+                    {
+                      label: "Select item",
+                      value: "",
+                    },
+                    ...items.map((product) => ({
+                      label: product.name || product.itemName || product,
+                      value: product.name || product.itemName || product,
+                    })),
+                  ]}
+                />
 
-                  <Input
-                    label="Quantity"
-                    type="number"
-                    min="1"
-                    value={
-                      item.quantity
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      handleItemChange(
-                        index,
-                        "quantity",
-                        event.target
-                          .value
-                      )
-                    }
-                    placeholder="Enter quantity"
-                  />
+                <Input
+                  label="Quantity"
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(event) =>
+                    handleItemChange(index, "quantity", event.target.value)
+                  }
+                  placeholder="Enter quantity"
+                />
 
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeItem(
-                          index
-                        )
-                      }
-                      disabled={
-                        form.items
-                          .length ===
-                        1
-                      }
-                      className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-400/10 bg-red-400/[0.04] px-3 text-xs text-red-300/70 transition hover:border-red-400/25 hover:bg-red-400/[0.08] disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    disabled={form.items.length === 1}
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-400/10 bg-red-400/[0.04] px-3 text-xs text-red-300/70 transition hover:border-red-400/25 hover:bg-red-400/[0.08] disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto"
+                  >
+                    <Trash2 className="h-4 w-4" />
 
-                      <span className="sm:hidden">
-                        Remove
-                      </span>
-                    </button>
-                  </div>
+                    <span className="sm:hidden">Remove</span>
+                  </button>
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -918,9 +755,7 @@ function Dispatch() {
           <Input
             label="E-Way Bill Number"
             name="eWayBillNumber"
-            value={
-              form.eWayBillNumber
-            }
+            value={form.eWayBillNumber}
             onChange={handleChange}
             placeholder="EWB-123456789"
           />
@@ -941,9 +776,7 @@ function Dispatch() {
             name="numberOfBags"
             type="number"
             min="0"
-            value={
-              form.numberOfBags
-            }
+            value={form.numberOfBags}
             onChange={handleChange}
             placeholder="Enter number of bags"
             required
@@ -953,9 +786,7 @@ function Dispatch() {
             <Input
               label="Delivery Challan"
               name="deliveryChallan"
-              value={
-                form.deliveryChallan
-              }
+              value={form.deliveryChallan}
               onChange={handleChange}
               placeholder="DC-2026-001"
               required
@@ -968,25 +799,18 @@ function Dispatch() {
         ========================= */}
 
         <div className="mt-6 flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={resetForm}
-          >
+          <Button type="button" variant="secondary" onClick={resetForm}>
             Reset
           </Button>
 
-          <Button
-            type="submit"
-            disabled={loading}
-          >
+          <Button type="submit" disabled={loading}>
             {loading
               ? editingId
                 ? "Updating..."
                 : "Saving..."
               : editingId
-              ? "Update Dispatch"
-              : "Save Dispatch"}
+                ? "Update Dispatch"
+                : "Save Dispatch"}
           </Button>
         </div>
       </form>
@@ -1017,11 +841,7 @@ function Dispatch() {
             <input
               type="text"
               value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Search dispatches..."
               className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.025] pl-9 pr-3 text-xs text-white outline-none placeholder:text-white/20 focus:border-lime-300/30"
             />
@@ -1029,20 +849,13 @@ function Dispatch() {
 
           <button
             type="button"
-            onClick={
-              fetchDispatches
-            }
+            onClick={fetchDispatches}
             disabled={fetching}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-4 text-xs text-white/50 transition hover:border-white/20 hover:text-white disabled:opacity-40"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${
-                fetching
-                  ? "animate-spin"
-                  : ""
-              }`}
+              className={`h-3.5 w-3.5 ${fetching ? "animate-spin" : ""}`}
             />
-
             Refresh
           </button>
         </div>
@@ -1053,13 +866,11 @@ function Dispatch() {
       ========================= */}
 
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
-        {fetching &&
-        dispatches.length === 0 ? (
+        {fetching && dispatches.length === 0 ? (
           <div className="flex min-h-48 items-center justify-center text-sm text-white/30">
             Loading dispatch records...
           </div>
-        ) : filteredDispatches.length ===
-          0 ? (
+        ) : filteredDispatches.length === 0 ? (
           <div className="flex min-h-48 flex-col items-center justify-center px-5 text-center">
             <Truck className="h-8 w-8 text-white/15" />
 
@@ -1076,176 +887,119 @@ function Dispatch() {
             <table className="w-full min-w-[1100px] text-left">
               <thead>
                 <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-white/25">
-                  <th className="px-5 py-4 font-medium">
-                    Inspection
-                  </th>
+                  <th className="px-5 py-4 font-medium">Inspection</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Vendor
-                  </th>
+                  <th className="px-5 py-4 font-medium">Vendor</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Items
-                  </th>
+                  <th className="px-5 py-4 font-medium">Items</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Quality
-                  </th>
+                  <th className="px-5 py-4 font-medium">Quality</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Invoice
-                  </th>
+                  <th className="px-5 py-4 font-medium">Invoice</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Weight
-                  </th>
+                  <th className="px-5 py-4 font-medium">Weight</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Bags
-                  </th>
+                  <th className="px-5 py-4 font-medium">Bags</th>
 
-                  <th className="px-5 py-4 font-medium">
-                    Date
-                  </th>
+                  <th className="px-5 py-4 font-medium">Date</th>
 
-                  <th className="px-5 py-4 text-right font-medium">
-                    Actions
-                  </th>
+                  <th className="px-5 py-4 text-right font-medium">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredDispatches.map(
-                  (dispatch) => (
-                    <tr
-                      key={
-                        dispatch._id
-                      }
-                      className="border-b border-white/5 transition hover:bg-white/[0.02]"
-                    >
-                      <td className="px-5 py-4">
-                        <div>
-                          <p className="text-xs font-medium text-white">
-                            {
-                              dispatch.inspectionReport
-                            }
-                          </p>
+                {filteredDispatches.map((dispatch) => (
+                  <tr
+                    key={dispatch._id}
+                    className="border-b border-white/5 transition hover:bg-white/[0.02]"
+                  >
+                    <td className="px-5 py-4">
+                      <div>
+                        <p className="text-xs font-medium text-white">
+                          {dispatch.inspectionReport}
+                        </p>
 
-                          <p className="mt-1 text-[11px] text-white/25">
-                            {
-                              dispatch.deliveryChallan
-                            }
-                          </p>
-                        </div>
-                      </td>
+                        <p className="mt-1 text-[11px] text-white/25">
+                          {dispatch.deliveryChallan}
+                        </p>
+                      </div>
+                    </td>
 
-                      <td className="px-5 py-4 text-xs text-white/60">
-                        {
-                          dispatch.vendorName
-                        }
-                      </td>
+                    <td className="px-5 py-4 text-xs text-white/60">
+                      {dispatch.vendorName}
+                    </td>
 
-                      <td className="px-5 py-4">
-                        <div className="space-y-1">
-                          {dispatch.items?.map(
-                            (item) => (
-                              <div
-                                key={
-                                  item._id
-                                }
-                                className="flex items-center gap-2 text-xs"
-                              >
-                                <span className="text-white/60">
-                                  {
-                                    item.itemName
-                                  }
-                                </span>
+                    <td className="px-5 py-4">
+                      <div className="space-y-1">
+                        {dispatch.items?.map((item) => (
+                          <div
+                            key={item._id}
+                            className="flex items-center gap-2 text-xs"
+                          >
+                            <span className="text-white/60">
+                              {item.itemName}
+                            </span>
 
-                                <span className="text-white/25">
-                                  ×
-                                </span>
+                            <span className="text-white/25">×</span>
 
-                                <span className="text-white/40">
-                                  {
-                                    item.quantity
-                                  }
-                                </span>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </td>
+                            <span className="text-white/40">
+                              {item.quantity}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
 
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-medium ${getQualityClasses(
-                            dispatch.qualityResult
-                          )}`}
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-medium ${getQualityClasses(
+                          dispatch.qualityResult,
+                        )}`}
+                      >
+                        {dispatch.qualityResult}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4 text-xs text-white/50">
+                      {dispatch.invoiceNumber}
+                    </td>
+
+                    <td className="px-5 py-4 text-xs text-white/50">
+                      {dispatch.weight}
+                    </td>
+
+                    <td className="px-5 py-4 text-xs text-white/50">
+                      {dispatch.numberOfBags}
+                    </td>
+
+                    <td className="px-5 py-4 text-xs text-white/40">
+                      {formatDate(dispatch.createdAt)}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(dispatch)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-lime-300/20 hover:text-lime-300"
+                          title="Edit"
                         >
-                          {
-                            dispatch.qualityResult
-                          }
-                        </span>
-                      </td>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
 
-                      <td className="px-5 py-4 text-xs text-white/50">
-                        {
-                          dispatch.invoiceNumber
-                        }
-                      </td>
-
-                      <td className="px-5 py-4 text-xs text-white/50">
-                        {dispatch.weight}
-                      </td>
-
-                      <td className="px-5 py-4 text-xs text-white/50">
-                        {
-                          dispatch.numberOfBags
-                        }
-                      </td>
-
-                      <td className="px-5 py-4 text-xs text-white/40">
-                        {formatDate(
-                          dispatch.createdAt
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleEdit(
-                                dispatch
-                              )
-                            }
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-lime-300/20 hover:text-lime-300"
-                            title="Edit"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDelete(
-                                dispatch._id
-                              )
-                            }
-                            disabled={
-                              deletingId ===
-                              dispatch._id
-                            }
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-red-400/20 hover:text-red-300 disabled:opacity-40"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                )}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(dispatch._id)}
+                          disabled={deletingId === dispatch._id}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-red-400/20 hover:text-red-300 disabled:opacity-40"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

@@ -1,13 +1,7 @@
 const QualityInspection = require("../models/QualityInspection");
 
-// =========================
-// CREATE QUALITY INSPECTION
-// =========================
-
-const createQualityInspection = async (
-  req,
-  res
-) => {
+// Create quality inspection
+const createQualityInspection = async (req, res) => {
   try {
     const {
       inspectionReport,
@@ -22,10 +16,7 @@ const createQualityInspection = async (
       remarks,
     } = req.body;
 
-    // =========================
-    // BASIC VALIDATION
-    // =========================
-
+    // Basic validation
     if (
       !inspectionReport ||
       !items ||
@@ -40,15 +31,11 @@ const createQualityInspection = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "All required quality inspection fields must be filled.",
+        message: "All required quality inspection fields must be filled.",
       });
     }
 
-    // =========================
-    // VALIDATE ITEMS
-    // =========================
-
+    // Validate items
     for (const item of items) {
       if (
         !item.itemName ||
@@ -57,72 +44,50 @@ const createQualityInspection = async (
       ) {
         return res.status(400).json({
           success: false,
-          message:
-            "Each item must have a valid item name and quantity.",
+          message: "Each item must have a valid item name and quantity.",
         });
       }
     }
 
-    // =========================
-    // CREATE RECORD
-    // =========================
-
-    const qualityInspection =
-      await QualityInspection.create({
-        inspectionReport,
-        items,
-        vendorName,
-        qualityResult,
-        invoiceNumber,
-        eWayBillNumber:
-          eWayBillNumber || "",
-        weight,
-        numberOfBags,
-        deliveryChallan,
-        remarks: remarks || "",
-        createdBy:
-          req.user?._id || null,
-      });
+    // Create record
+    const qualityInspection = await QualityInspection.create({
+      inspectionReport,
+      items,
+      vendorName,
+      qualityResult,
+      invoiceNumber,
+      eWayBillNumber: eWayBillNumber || "",
+      weight,
+      numberOfBags,
+      deliveryChallan,
+      remarks: remarks || "",
+      createdBy: req.user?._id || null,
+    });
 
     res.status(201).json({
       success: true,
-      message:
-        "Quality inspection created successfully.",
+      message: "Quality inspection created successfully.",
       data: qualityInspection,
     });
   } catch (error) {
-    console.error(
-      "Create Quality Inspection Error:",
-      error
-    );
+    console.error("Create Quality Inspection Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while creating quality inspection.",
+      message: "Server error while creating quality inspection.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// GET ALL QUALITY INSPECTIONS
-// =========================
-
-const getQualityInspections = async (
-  req,
-  res
-) => {
+// Get all quality inspections
+const getQualityInspections = async (req, res) => {
   try {
-    const inspections =
-      await QualityInspection.find()
-        .populate(
-          "createdBy",
-          "name email role"
-        )
-        .sort({
-          createdAt: -1,
-        });
+    const inspections = await QualityInspection.find()
+      .populate("createdBy", "name email role")
+      .sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -130,42 +95,28 @@ const getQualityInspections = async (
       data: inspections,
     });
   } catch (error) {
-    console.error(
-      "Get Quality Inspections Error:",
-      error
-    );
+    console.error("Get Quality Inspections Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while fetching quality inspections.",
+      message: "Server error while fetching quality inspections.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// GET SINGLE QUALITY INSPECTION
-// =========================
-
-const getQualityInspection = async (
-  req,
-  res
-) => {
+// Get single quality inspection
+const getQualityInspection = async (req, res) => {
   try {
-    const inspection =
-      await QualityInspection.findById(
-        req.params.id
-      ).populate(
-        "createdBy",
-        "name email role"
-      );
+    const inspection = await QualityInspection.findById(req.params.id).populate(
+      "createdBy",
+      "name email role",
+    );
 
     if (!inspection) {
       return res.status(404).json({
         success: false,
-        message:
-          "Quality inspection not found.",
+        message: "Quality inspection not found.",
       });
     }
 
@@ -174,28 +125,18 @@ const getQualityInspection = async (
       data: inspection,
     });
   } catch (error) {
-    console.error(
-      "Get Quality Inspection Error:",
-      error
-    );
+    console.error("Get Quality Inspection Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while fetching quality inspection.",
+      message: "Server error while fetching quality inspection.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// UPDATE QUALITY INSPECTION
-// =========================
-
-const updateQualityInspection = async (
-  req,
-  res
-) => {
+// Update quality inspection
+const updateQualityInspection = async (req, res) => {
   try {
     const {
       inspectionReport,
@@ -210,39 +151,25 @@ const updateQualityInspection = async (
       remarks,
     } = req.body;
 
-    const inspection =
-      await QualityInspection.findById(
-        req.params.id
-      );
+    const inspection = await QualityInspection.findById(req.params.id);
 
     if (!inspection) {
       return res.status(404).json({
         success: false,
-        message:
-          "Quality inspection not found.",
+        message: "Quality inspection not found.",
       });
     }
 
-    // =========================
-    // UPDATE FIELDS
-    // =========================
-
-    if (
-      inspectionReport !== undefined
-    ) {
-      inspection.inspectionReport =
-        inspectionReport;
+    // Update fields
+    if (inspectionReport !== undefined) {
+      inspection.inspectionReport = inspectionReport;
     }
 
     if (items !== undefined) {
-      if (
-        !Array.isArray(items) ||
-        items.length === 0
-      ) {
+      if (!Array.isArray(items) || items.length === 0) {
         return res.status(400).json({
           success: false,
-          message:
-            "Items must contain at least one item.",
+          message: "Items must contain at least one item.",
         });
       }
 
@@ -250,96 +177,64 @@ const updateQualityInspection = async (
     }
 
     if (vendorName !== undefined) {
-      inspection.vendorName =
-        vendorName;
+      inspection.vendorName = vendorName;
     }
 
-    if (
-      qualityResult !== undefined
-    ) {
-      inspection.qualityResult =
-        qualityResult;
+    if (qualityResult !== undefined) {
+      inspection.qualityResult = qualityResult;
     }
 
-    if (
-      invoiceNumber !== undefined
-    ) {
-      inspection.invoiceNumber =
-        invoiceNumber;
+    if (invoiceNumber !== undefined) {
+      inspection.invoiceNumber = invoiceNumber;
     }
 
-    if (
-      eWayBillNumber !== undefined
-    ) {
-      inspection.eWayBillNumber =
-        eWayBillNumber;
+    if (eWayBillNumber !== undefined) {
+      inspection.eWayBillNumber = eWayBillNumber;
     }
 
     if (weight !== undefined) {
       inspection.weight = weight;
     }
 
-    if (
-      numberOfBags !== undefined
-    ) {
-      inspection.numberOfBags =
-        numberOfBags;
+    if (numberOfBags !== undefined) {
+      inspection.numberOfBags = numberOfBags;
     }
 
-    if (
-      deliveryChallan !== undefined
-    ) {
-      inspection.deliveryChallan =
-        deliveryChallan;
+    if (deliveryChallan !== undefined) {
+      inspection.deliveryChallan = deliveryChallan;
     }
 
     if (remarks !== undefined) {
       inspection.remarks = remarks;
     }
 
-    const updatedInspection =
-      await inspection.save();
+    const updatedInspection = await inspection.save();
 
     res.status(200).json({
       success: true,
-      message:
-        "Quality inspection updated successfully.",
+      message: "Quality inspection updated successfully.",
       data: updatedInspection,
     });
   } catch (error) {
-    console.error(
-      "Update Quality Inspection Error:",
-      error
-    );
+    console.error("Update Quality Inspection Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while updating quality inspection.",
+      message: "Server error while updating quality inspection.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// DELETE QUALITY INSPECTION
-// =========================
-
-const deleteQualityInspection = async (
-  req,
-  res
-) => {
+// Delete quality inspection
+const deleteQualityInspection = async (req, res) => {
   try {
-    const inspection =
-      await QualityInspection.findById(
-        req.params.id
-      );
+    const inspection = await QualityInspection.findById(req.params.id);
 
     if (!inspection) {
       return res.status(404).json({
         success: false,
-        message:
-          "Quality inspection not found.",
+        message: "Quality inspection not found.",
       });
     }
 
@@ -347,27 +242,18 @@ const deleteQualityInspection = async (
 
     res.status(200).json({
       success: true,
-      message:
-        "Quality inspection deleted successfully.",
+      message: "Quality inspection deleted successfully.",
     });
   } catch (error) {
-    console.error(
-      "Delete Quality Inspection Error:",
-      error
-    );
+    console.error("Delete Quality Inspection Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while deleting quality inspection.",
+      message: "Server error while deleting quality inspection.",
       error: error.message,
     });
   }
 };
-
-// =========================
-// EXPORT
-// =========================
 
 module.exports = {
   createQualityInspection,

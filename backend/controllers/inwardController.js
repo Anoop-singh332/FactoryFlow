@@ -1,9 +1,6 @@
 const InwardSupply = require("../models/InwardSupply");
 
-// =========================
-// CREATE INWARD SUPPLY
-// =========================
-
+// Create inward supply
 const createInwardSupply = async (req, res) => {
   try {
     const {
@@ -58,10 +55,7 @@ const createInwardSupply = async (req, res) => {
       data: inwardSupply,
     });
   } catch (error) {
-    console.error(
-      "Create Inward Supply Error:",
-      error
-    );
+    console.error("Create Inward Supply Error:", error);
 
     res.status(500).json({
       success: false,
@@ -71,17 +65,11 @@ const createInwardSupply = async (req, res) => {
   }
 };
 
-// =========================
-// GET ALL INWARD SUPPLIES
-// =========================
-
+// Get all inward supplies
 const getInwardSupplies = async (req, res) => {
   try {
     const inwardSupplies = await InwardSupply.find()
-      .populate(
-        "createdBy",
-        "name email role"
-      )
+      .populate("createdBy", "name email role")
       .sort({
         createdAt: -1,
       });
@@ -92,33 +80,23 @@ const getInwardSupplies = async (req, res) => {
       data: inwardSupplies,
     });
   } catch (error) {
-    console.error(
-      "Get Inward Supplies Error:",
-      error
-    );
+    console.error("Get Inward Supplies Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while fetching inward supplies.",
+      message: "Server error while fetching inward supplies.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// GET SINGLE INWARD SUPPLY
-// =========================
-
+// Get single inward supply
 const getInwardSupply = async (req, res) => {
   try {
-    const inwardSupply =
-      await InwardSupply.findById(
-        req.params.id
-      ).populate(
-        "createdBy",
-        "name email role"
-      );
+    const inwardSupply = await InwardSupply.findById(req.params.id).populate(
+      "createdBy",
+      "name email role",
+    );
 
     if (!inwardSupply) {
       return res.status(404).json({
@@ -132,24 +110,17 @@ const getInwardSupply = async (req, res) => {
       data: inwardSupply,
     });
   } catch (error) {
-    console.error(
-      "Get Single Inward Supply Error:",
-      error
-    );
+    console.error("Get Single Inward Supply Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while fetching inward supply.",
+      message: "Server error while fetching inward supply.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// UPDATE INWARD SUPPLY
-// =========================
-
+// Update inward supply
 const updateInwardSupply = async (req, res) => {
   try {
     const {
@@ -163,10 +134,7 @@ const updateInwardSupply = async (req, res) => {
     } = req.body;
 
     // Find existing record
-    const inwardSupply =
-      await InwardSupply.findById(
-        req.params.id
-      );
+    const inwardSupply = await InwardSupply.findById(req.params.id);
 
     if (!inwardSupply) {
       return res.status(404).json({
@@ -181,28 +149,23 @@ const updateInwardSupply = async (req, res) => {
     }
 
     if (invoiceNumber !== undefined) {
-      inwardSupply.invoiceNumber =
-        invoiceNumber;
+      inwardSupply.invoiceNumber = invoiceNumber;
     }
 
     if (materialWeight !== undefined) {
-      inwardSupply.materialWeight =
-        materialWeight;
+      inwardSupply.materialWeight = materialWeight;
     }
 
     if (materialSize !== undefined) {
-      inwardSupply.materialSize =
-        materialSize;
+      inwardSupply.materialSize = materialSize;
     }
 
     if (materialType !== undefined) {
-      inwardSupply.materialType =
-        materialType;
+      inwardSupply.materialType = materialType;
     }
 
     if (materialItemName !== undefined) {
-      inwardSupply.materialItemName =
-        materialItemName;
+      inwardSupply.materialItemName = materialItemName;
     }
 
     if (receivedBy !== undefined) {
@@ -211,46 +174,33 @@ const updateInwardSupply = async (req, res) => {
 
     // Replace document if new document uploaded
     if (req.file) {
-      inwardSupply.document =
-        `/uploads/${req.file.filename}`;
+      inwardSupply.document = `/uploads/${req.file.filename}`;
     }
 
     // Save updated record
-    const updatedInwardSupply =
-      await inwardSupply.save();
+    const updatedInwardSupply = await inwardSupply.save();
 
     res.status(200).json({
       success: true,
-      message:
-        "Inward supply updated successfully.",
+      message: "Inward supply updated successfully.",
       data: updatedInwardSupply,
     });
   } catch (error) {
-    console.error(
-      "Update Inward Supply Error:",
-      error
-    );
+    console.error("Update Inward Supply Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while updating inward supply.",
+      message: "Server error while updating inward supply.",
       error: error.message,
     });
   }
 };
 
-// =========================
-// DELETE INWARD SUPPLY
-// =========================
-
+// Delete inward supply
 const deleteInwardSupply = async (req, res) => {
   try {
     // Find record
-    const inwardSupply =
-      await InwardSupply.findById(
-        req.params.id
-      );
+    const inwardSupply = await InwardSupply.findById(req.params.id);
 
     if (!inwardSupply) {
       return res.status(404).json({
@@ -264,27 +214,18 @@ const deleteInwardSupply = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message:
-        "Inward supply deleted successfully.",
+      message: "Inward supply deleted successfully.",
     });
   } catch (error) {
-    console.error(
-      "Delete Inward Supply Error:",
-      error
-    );
+    console.error("Delete Inward Supply Error:", error);
 
     res.status(500).json({
       success: false,
-      message:
-        "Server error while deleting inward supply.",
+      message: "Server error while deleting inward supply.",
       error: error.message,
     });
   }
 };
-
-// =========================
-// EXPORT CONTROLLERS
-// =========================
 
 module.exports = {
   createInwardSupply,

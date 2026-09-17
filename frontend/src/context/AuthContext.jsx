@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
@@ -37,19 +32,16 @@ export function AuthProvider({ children }) {
         };
       }
 
-      const response = await fetch(
-        `${API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -61,16 +53,10 @@ export function AuthProvider({ children }) {
       }
 
       // Save JWT
-      localStorage.setItem(
-        "factoryflow_token",
-        data.token
-      );
+      localStorage.setItem("factoryflow_token", data.token);
 
       // Save user
-      localStorage.setItem(
-        "factoryflow_user",
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem("factoryflow_user", JSON.stringify(data.user));
 
       setUser(data.user);
       setIsAuthenticated(true);
@@ -108,23 +94,18 @@ export function AuthProvider({ children }) {
 
   const getCurrentUser = async () => {
     try {
-      const token = localStorage.getItem(
-        "factoryflow_token"
-      );
+      const token = localStorage.getItem("factoryflow_token");
 
       if (!token) {
         return;
       }
 
-      const response = await fetch(
-        `${API_URL}/auth/me`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -135,25 +116,17 @@ export function AuthProvider({ children }) {
 
       setUser(data.user);
 
-      localStorage.setItem(
-        "factoryflow_user",
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem("factoryflow_user", JSON.stringify(data.user));
 
       setIsAuthenticated(true);
     } catch (error) {
-      console.error(
-        "Get Current User Error:",
-        error
-      );
+      console.error("Get Current User Error:", error);
     }
   };
 
   // Check login when application starts
   useEffect(() => {
-    const token = localStorage.getItem(
-      "factoryflow_token"
-    );
+    const token = localStorage.getItem("factoryflow_token");
 
     if (token) {
       getCurrentUser();

@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  FileText,
-  PackageCheck,
-  Plus,
-  Upload,
-  X,
-} from "lucide-react";
+import { FileText, PackageCheck, Plus, Upload, X } from "lucide-react";
 
 import PageHeader from "../../components/PageHeader";
 import Input from "../../components/ui/Input";
@@ -101,14 +95,9 @@ function InwardSupply() {
   // =========================
 
   const handleDocuments = (event) => {
-    const files = Array.from(
-      event.target.files || []
-    );
+    const files = Array.from(event.target.files || []);
 
-    setDocuments((previous) => [
-      ...previous,
-      ...files,
-    ]);
+    setDocuments((previous) => [...previous, ...files]);
 
     setError("");
   };
@@ -119,9 +108,7 @@ function InwardSupply() {
 
   const removeDocument = (index) => {
     setDocuments((previous) =>
-      previous.filter(
-        (_, fileIndex) => fileIndex !== index
-      )
+      previous.filter((_, fileIndex) => fileIndex !== index),
     );
   };
 
@@ -155,14 +142,10 @@ function InwardSupply() {
     setSaved(false);
 
     try {
-      const token = localStorage.getItem(
-        "factoryflow_token"
-      );
+      const token = localStorage.getItem("factoryflow_token");
 
       if (!token) {
-        setError(
-          "You are not logged in. Please login again."
-        );
+        setError("You are not logged in. Please login again.");
 
         setLoading(false);
         return;
@@ -171,70 +154,40 @@ function InwardSupply() {
       // Create FormData
       const formData = new FormData();
 
-      formData.append(
-        "vendorName",
-        form.vendorName
-      );
+      formData.append("vendorName", form.vendorName);
 
-      formData.append(
-        "invoiceNumber",
-        form.invoiceNumber
-      );
+      formData.append("invoiceNumber", form.invoiceNumber);
 
-      formData.append(
-        "materialWeight",
-        form.materialWeight
-      );
+      formData.append("materialWeight", form.materialWeight);
 
-      formData.append(
-        "materialSize",
-        form.materialSize
-      );
+      formData.append("materialSize", form.materialSize);
 
-      formData.append(
-        "materialType",
-        form.materialType
-      );
+      formData.append("materialType", form.materialType);
 
-      formData.append(
-        "materialItemName",
-        form.materialItemName
-      );
+      formData.append("materialItemName", form.materialItemName);
 
-      formData.append(
-        "receivedBy",
-        form.receivedBy
-      );
+      formData.append("receivedBy", form.receivedBy);
 
       // Backend currently accepts one document
       if (documents.length > 0) {
-        formData.append(
-          "document",
-          documents[0]
-        );
+        formData.append("document", documents[0]);
       }
 
       // Send request
-      const response = await fetch(
-        `${API_URL}/inward`,
-        {
-          method: "POST",
+      const response = await fetch(`${API_URL}/inward`, {
+        method: "POST",
 
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
 
-          body: formData,
-        }
-      );
+        body: formData,
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Failed to save inward supply."
-        );
+        throw new Error(data.message || "Failed to save inward supply.");
       }
 
       // Success
@@ -247,14 +200,10 @@ function InwardSupply() {
         setSaved(false);
       }, 3000);
     } catch (error) {
-      console.error(
-        "Create Inward Supply Error:",
-        error
-      );
+      console.error("Create Inward Supply Error:", error);
 
       setError(
-        error.message ||
-          "Something went wrong while saving the record."
+        error.message || "Something went wrong while saving the record.",
       );
     } finally {
       setLoading(false);
@@ -304,13 +253,10 @@ function InwardSupply() {
               </div>
 
               <div>
-                <h2 className="ff-section-title">
-                  Material Receipt
-                </h2>
+                <h2 className="ff-section-title">Material Receipt</h2>
 
                 <p className="mt-1 text-xs text-white/30">
-                  Enter the details of received
-                  material.
+                  Enter the details of received material.
                 </p>
               </div>
             </div>
@@ -396,13 +342,10 @@ function InwardSupply() {
                 </div>
 
                 <div>
-                  <h3 className="ff-section-title">
-                    Documents
-                  </h3>
+                  <h3 className="ff-section-title">Documents</h3>
 
                   <p className="mt-1 text-[10px] text-white/30">
-                    Upload invoices or supporting
-                    documents.
+                    Upload invoices or supporting documents.
                   </p>
                 </div>
               </div>
@@ -429,30 +372,26 @@ function InwardSupply() {
 
               {documents.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  {documents.map(
-                    (file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                  {documents.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
+                    >
+                      <FileText className="h-4 w-4 shrink-0 text-lime-300/70" />
+
+                      <p className="min-w-0 flex-1 truncate text-[11px] text-white/55">
+                        {file.name}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => removeDocument(index)}
+                        className="rounded-lg p-1 text-white/25 hover:bg-white/5 hover:text-white"
                       >
-                        <FileText className="h-4 w-4 shrink-0 text-lime-300/70" />
-
-                        <p className="min-w-0 flex-1 truncate text-[11px] text-white/55">
-                          {file.name}
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeDocument(index)
-                          }
-                          className="rounded-lg p-1 text-white/25 hover:bg-white/5 hover:text-white"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    )
-                  )}
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -470,9 +409,7 @@ function InwardSupply() {
                 <span className="h-2 w-2 rounded-full bg-lime-300" />
 
                 <span className="text-xs text-white/55">
-                  {loading
-                    ? "Saving record..."
-                    : "Ready to receive"}
+                  {loading ? "Saving record..." : "Ready to receive"}
                 </span>
               </div>
             </div>
@@ -493,15 +430,10 @@ function InwardSupply() {
             Clear
           </Button>
 
-          <Button
-            type="submit"
-            disabled={loading}
-          >
+          <Button type="submit" disabled={loading}>
             <PackageCheck className="h-4 w-4" />
 
-            {loading
-              ? "Saving..."
-              : "Save Inward Record"}
+            {loading ? "Saving..." : "Save Inward Record"}
           </Button>
         </div>
       </form>
