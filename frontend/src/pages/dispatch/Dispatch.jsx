@@ -8,6 +8,7 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
+  Printer,
 } from "lucide-react";
 
 import PageHeader from "../../components/PageHeader";
@@ -16,23 +17,21 @@ import Select from "../../components/ui/Select";
 import Button from "../../components/ui/Button";
 import { items } from "../../data/items";
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const emptyItem = {
   itemName: "",
   quantity: "",
+  weight: "",
+  numberOfBags: "",
 };
 
 const initialForm = {
   inspectionReport: "",
   items: [{ ...emptyItem }],
   vendorName: "",
-  qualityResult: "Passed",
   invoiceNumber: "",
   eWayBillNumber: "",
-  weight: "",
-  numberOfBags: "",
   deliveryChallan: "",
 };
 
@@ -46,10 +45,13 @@ function Dispatch() {
   const [search, setSearch] = useState("");
 
   const [loading, setLoading] = useState(false);
+
   const [fetching, setFetching] = useState(false);
+
   const [deletingId, setDeletingId] = useState(null);
 
   const [success, setSuccess] = useState("");
+
   const [error, setError] = useState("");
 
   // =========================
@@ -197,6 +199,24 @@ function Dispatch() {
   };
 
   // =========================
+  // CALCULATE TOTALS
+  // =========================
+
+  const getTotalWeight = () => {
+    return form.items.reduce(
+      (total, item) => total + Number(item.weight || 0),
+      0,
+    );
+  };
+
+  const getTotalBags = () => {
+    return form.items.reduce(
+      (total, item) => total + Number(item.numberOfBags || 0),
+      0,
+    );
+  };
+
+  // =========================
   // VALIDATION
   // =========================
 
@@ -209,20 +229,8 @@ function Dispatch() {
       return "Vendor name is required.";
     }
 
-    if (!form.qualityResult) {
-      return "Quality result is required.";
-    }
-
     if (!form.invoiceNumber.trim()) {
       return "Invoice number is required.";
-    }
-
-    if (!form.weight) {
-      return "Weight is required.";
-    }
-
-    if (form.numberOfBags === "") {
-      return "Number of bags is required.";
     }
 
     if (!form.deliveryChallan.trim()) {
@@ -234,12 +242,22 @@ function Dispatch() {
     }
 
     for (let i = 0; i < form.items.length; i++) {
-      if (!form.items[i].itemName) {
+      const item = form.items[i];
+
+      if (!item.itemName) {
         return `Please select item ${i + 1}.`;
       }
 
-      if (!form.items[i].quantity || Number(form.items[i].quantity) < 1) {
+      if (!item.quantity || Number(item.quantity) < 1) {
         return `Please enter a valid quantity for item ${i + 1}.`;
+      }
+
+      if (item.weight === "" || Number(item.weight) <= 0) {
+        return `Please enter a valid weight for item ${i + 1}.`;
+      }
+
+      if (item.numberOfBags === "" || Number(item.numberOfBags) < 0) {
+        return `Please enter a valid number of bags for item ${i + 1}.`;
       }
     }
 
@@ -268,25 +286,29 @@ function Dispatch() {
 
       const token = getToken();
 
+      const totalWeight = getTotalWeight();
+
+      const totalBags = getTotalBags();
+
       const payload = {
         inspectionReport: form.inspectionReport.trim(),
 
         items: form.items.map((item) => ({
           itemName: item.itemName,
           quantity: Number(item.quantity),
+          weight: Number(item.weight),
+          numberOfBags: Number(item.numberOfBags),
         })),
 
         vendorName: form.vendorName.trim(),
-
-        qualityResult: form.qualityResult,
 
         invoiceNumber: form.invoiceNumber.trim(),
 
         eWayBillNumber: form.eWayBillNumber.trim(),
 
-        weight: Number(form.weight),
+        weight: totalWeight,
 
-        numberOfBags: Number(form.numberOfBags),
+        numberOfBags: totalBags,
 
         deliveryChallan: form.deliveryChallan.trim(),
       };
@@ -344,21 +366,24 @@ function Dispatch() {
         dispatch.items?.length > 0
           ? dispatch.items.map((item) => ({
               itemName: item.itemName || "",
+
               quantity: item.quantity || "",
+
+              weight: item.weight ?? "",
+
+              numberOfBags: item.numberOfBags ?? "",
             }))
-          : [{ ...emptyItem }],
+          : [
+              {
+                ...emptyItem,
+              },
+            ],
 
       vendorName: dispatch.vendorName || "",
-
-      qualityResult: dispatch.qualityResult || "Passed",
 
       invoiceNumber: dispatch.invoiceNumber || "",
 
       eWayBillNumber: dispatch.eWayBillNumber || "",
-
-      weight: dispatch.weight ?? "",
-
-      numberOfBags: dispatch.numberOfBags ?? "",
 
       deliveryChallan: dispatch.deliveryChallan || "",
     });
@@ -422,6 +447,384 @@ function Dispatch() {
   };
 
   // =========================
+  // REAL PRINT
+  // =========================
+
+  const handlePrint = (dispatch) => {
+    const printWindow = window.open("", "_blank", "width=1000,height=800");
+
+    if (!printWindow) {
+      alert("Please allow pop-ups in your browser to print the dispatch.");
+      return;
+    }
+
+    const escapeHtml = (value) => {
+      if (value === null || value === undefined) {
+        return "-";
+      }
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    const printDate = dispatch.createdAt
+      ? new Date(dispatch.createdAt).toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "-";
+
+    const itemRows =
+      dispatch.items
+        ?.map(
+          (item, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(item.itemName)}</td>
+              <td>${escapeHtml(item.quantity)}</td>
+              <td>${escapeHtml(item.weight)} Kg</td>
+              <td>${escapeHtml(item.numberOfBags)}</td>
+            </tr>
+          `,
+        )
+        .join("") ||
+      `
+        <tr>
+          <td colspan="5">
+            No items
+          </td>
+        </tr>
+      `;
+
+    printWindow.document.open();
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+
+          <meta charset="UTF-8" />
+
+          <title>
+            Dispatch - ${escapeHtml(dispatch.invoiceNumber || "Record")}
+          </title>
+
+          <style>
+
+            * {
+              box-sizing: border-box;
+            }
+
+            body {
+              margin: 0;
+              padding: 30px;
+              background: #ffffff;
+              color: #111111;
+              font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            }
+
+            .page {
+              max-width: 900px;
+              margin: 0 auto;
+            }
+
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 3px solid #84cc16;
+              padding-bottom: 18px;
+              margin-bottom: 22px;
+            }
+
+            .company-name {
+              font-size: 28px;
+              font-weight: 800;
+              margin: 0;
+            }
+
+            .document-title {
+              font-size: 18px;
+              font-weight: 700;
+              margin-top: 5px;
+            }
+
+            .print-date {
+              text-align: right;
+              font-size: 11px;
+              color: #666666;
+            }
+
+            .section {
+              margin-top: 22px;
+            }
+
+            .section-title {
+              font-size: 14px;
+              font-weight: 800;
+              padding-bottom: 8px;
+              margin-bottom: 12px;
+              border-bottom: 1px solid #d1d5db;
+            }
+
+            .details {
+              display: grid;
+              grid-template-columns:
+                1fr 1fr;
+              gap: 10px;
+            }
+
+            .detail {
+              border: 1px solid #d1d5db;
+              border-radius: 6px;
+              padding: 10px;
+              min-height: 58px;
+            }
+
+            .label {
+              font-size: 9px;
+              color: #6b7280;
+              text-transform: uppercase;
+              font-weight: 700;
+              margin-bottom: 5px;
+            }
+
+            .value {
+              font-size: 13px;
+              font-weight: 600;
+              word-break: break-word;
+            }
+
+            table {
+              width: 100%;
+              border-collapse:
+                collapse;
+            }
+
+            th {
+              background: #f3f4f6;
+              font-size: 11px;
+              font-weight: 800;
+              text-align: left;
+            }
+
+            th,
+            td {
+              border: 1px solid #d1d5db;
+              padding: 9px;
+              font-size: 11px;
+            }
+
+            .footer {
+              display: flex;
+              justify-content: space-between;
+              margin-top: 40px;
+              padding-top: 12px;
+              border-top: 1px solid #d1d5db;
+              color: #6b7280;
+              font-size: 10px;
+            }
+
+            @media print {
+
+              @page {
+                size: A4;
+                margin: 12mm;
+              }
+
+              body {
+                padding: 0;
+              }
+
+              .page {
+                max-width: none;
+              }
+
+            }
+
+          </style>
+
+        </head>
+
+        <body>
+
+          <div class="page">
+
+            <div class="header">
+
+              <div>
+                <h1 class="company-name">
+                  FactoryFlow
+                </h1>
+
+                <div class="document-title">
+                  Dispatch Record
+                </div>
+              </div>
+
+              <div class="print-date">
+                <strong>
+                  Dispatch Date
+                </strong>
+                <br />
+
+                ${escapeHtml(printDate)}
+              </div>
+
+            </div>
+
+            <div class="section">
+
+              <div class="section-title">
+                Dispatch Information
+              </div>
+
+              <div class="details">
+
+                <div class="detail">
+                  <div class="label">
+                    Quality Inspection Report
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.inspectionReport)}
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    Vendor Name
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.vendorName)}
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    Invoice Number
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.invoiceNumber)}
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    E-Way Bill Number
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.eWayBillNumber || "-")}
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    Delivery Challan
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.deliveryChallan)}
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    Total Weight
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.weight)}
+                    Kg
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <div class="label">
+                    Total Number of Bags
+                  </div>
+
+                  <div class="value">
+                    ${escapeHtml(dispatch.numberOfBags)}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="section">
+
+              <div class="section-title">
+                Dispatch Items
+              </div>
+
+              <table>
+
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Weight</th>
+                    <th>Number of Bags</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  ${itemRows}
+                </tbody>
+
+              </table>
+
+            </div>
+
+            <div class="footer">
+
+              <span>
+                FactoryFlow
+              </span>
+
+              <span>
+                Printed on:
+                ${escapeHtml(new Date().toLocaleString("en-IN"))}
+              </span>
+
+            </div>
+
+          </div>
+
+          <script>
+
+            window.onload = function () {
+              window.focus();
+              window.print();
+            };
+
+          </script>
+
+        </body>
+
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
+
+  // =========================
   // SEARCH
   // =========================
 
@@ -440,7 +843,6 @@ function Dispatch() {
         dispatch.inspectionReport?.toLowerCase().includes(searchValue) ||
         dispatch.vendorName?.toLowerCase().includes(searchValue) ||
         dispatch.invoiceNumber?.toLowerCase().includes(searchValue) ||
-        dispatch.qualityResult?.toLowerCase().includes(searchValue) ||
         itemsText.toLowerCase().includes(searchValue)
       );
     });
@@ -452,16 +854,13 @@ function Dispatch() {
 
   const totalDispatches = dispatches.length;
 
-  const passedDispatches = dispatches.filter(
-    (dispatch) => dispatch.qualityResult === "Passed",
-  ).length;
-
-  const failedDispatches = dispatches.filter(
-    (dispatch) => dispatch.qualityResult === "Failed",
-  ).length;
-
   const totalWeight = dispatches.reduce(
     (total, dispatch) => total + Number(dispatch.weight || 0),
+    0,
+  );
+
+  const totalBags = dispatches.reduce(
+    (total, dispatch) => total + Number(dispatch.numberOfBags || 0),
     0,
   );
 
@@ -481,28 +880,8 @@ function Dispatch() {
     });
   };
 
-  // =========================
-  // QUALITY STYLE
-  // =========================
-
-  const getQualityClasses = (quality) => {
-    switch (quality) {
-      case "Passed":
-        return "border-lime-300/20 bg-lime-300/10 text-lime-300";
-
-      case "Failed":
-        return "border-red-400/20 bg-red-400/10 text-red-300";
-
-      case "Partially Passed":
-        return "border-amber-300/20 bg-amber-300/10 text-amber-300";
-
-      default:
-        return "border-white/10 bg-white/5 text-white/50";
-    }
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* =========================
           PAGE HEADER
       ========================= */}
@@ -511,9 +890,6 @@ function Dispatch() {
         eyebrow="Dispatch Management"
         title="Dispatch"
         description="Manage quality-approved materials and maintain dispatch records."
-        action="New Dispatch"
-        actionIcon={Plus}
-        onAction={handleNewDispatch}
       />
 
       {/* =========================
@@ -521,14 +897,14 @@ function Dispatch() {
       ========================= */}
 
       {success && (
-        <div className="flex items-center gap-3 rounded-xl border border-lime-300/20 bg-lime-300/[0.07] px-4 py-3 text-sm text-lime-200">
+        <div className="flex items-center gap-2 rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-xs font-medium text-lime-700">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{success}</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-3 rounded-xl border border-red-400/20 bg-red-400/[0.07] px-4 py-3 text-sm text-red-300">
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -538,49 +914,33 @@ function Dispatch() {
           STATS
       ========================= */}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-wider text-white/35">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
               Total Dispatches
             </p>
 
-            <Truck className="h-4 w-4 text-white/30" />
+            <Truck className="h-3.5 w-3.5 text-slate-400" />
           </div>
 
-          <p className="mt-3 text-2xl font-semibold text-white">
-            {totalDispatches}
-          </p>
+          <p className="mt-1 text-xl font-bold text-black">{totalDispatches}</p>
         </div>
 
-        <div className="rounded-2xl border border-lime-300/10 bg-lime-300/[0.025] p-4">
-          <p className="text-[11px] uppercase tracking-wider text-white/35">
-            Passed
-          </p>
-
-          <p className="mt-3 text-2xl font-semibold text-lime-300">
-            {passedDispatches}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-red-400/10 bg-red-400/[0.025] p-4">
-          <p className="text-[11px] uppercase tracking-wider text-white/35">
-            Failed
-          </p>
-
-          <p className="mt-3 text-2xl font-semibold text-red-300">
-            {failedDispatches}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-          <p className="text-[11px] uppercase tracking-wider text-white/35">
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
             Total Weight
           </p>
 
-          <p className="mt-3 text-2xl font-semibold text-white">
-            {totalWeight}
+          <p className="mt-1 text-xl font-bold text-black">{totalWeight} Kg</p>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+            Total Bags
           </p>
+
+          <p className="mt-1 text-xl font-bold text-black">{totalBags}</p>
         </div>
       </div>
 
@@ -590,15 +950,17 @@ function Dispatch() {
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 shadow-2xl shadow-black/10 sm:p-6"
+        className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-4"
       >
-        <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-5">
+        {/* FORM HEADER */}
+
+        <div className="mb-3 flex items-center justify-between border-b border-slate-200 pb-3">
           <div>
-            <p className="text-sm font-semibold text-white">
+            <p className="text-xs font-bold text-black">
               {editingId ? "Edit Dispatch" : "Dispatch Details"}
             </p>
 
-            <p className="mt-1 text-xs text-white/35">
+            <p className="mt-0.5 text-[10px] font-medium text-slate-500">
               Record the materials being dispatched.
             </p>
           </div>
@@ -607,7 +969,7 @@ function Dispatch() {
             <button
               type="button"
               onClick={resetForm}
-              className="text-xs text-white/40 transition hover:text-white"
+              className="text-[10px] font-semibold text-slate-500 transition hover:text-black"
             >
               Cancel Edit
             </button>
@@ -618,7 +980,7 @@ function Dispatch() {
             BASIC DETAILS
         ========================= */}
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <Input
             label="Quality Inspection Report"
             name="inspectionReport"
@@ -637,31 +999,6 @@ function Dispatch() {
             required
           />
 
-          <Select
-            label="Quality of Item"
-            name="qualityResult"
-            value={form.qualityResult}
-            onChange={handleChange}
-            options={[
-              {
-                label: "Passed",
-                value: "Passed",
-              },
-              {
-                label: "Failed",
-                value: "Failed",
-              },
-              {
-                label: "Partially Passed",
-                value: "Partially Passed",
-              },
-              {
-                label: "Pending",
-                value: "Pending",
-              },
-            ]}
-          />
-
           <Input
             label="Invoice Number"
             name="invoiceNumber"
@@ -670,89 +1007,7 @@ function Dispatch() {
             placeholder="INV-2026-001"
             required
           />
-        </div>
 
-        {/* =========================
-            ITEMS
-        ========================= */}
-
-        <div className="mt-8">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-white">Dispatch Items</p>
-
-              <p className="mt-1 text-xs text-white/35">
-                Add one or more items included in this dispatch.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={addItem}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-lime-300/20 bg-lime-300/[0.06] px-3 py-2 text-xs font-medium text-lime-200 transition hover:border-lime-300/40 hover:bg-lime-300/[0.1]"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Item
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {form.items.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-black/10 p-3 sm:grid-cols-[1fr_180px_auto]"
-              >
-                <Select
-                  label={`Item ${index + 1}`}
-                  value={item.itemName}
-                  onChange={(event) =>
-                    handleItemChange(index, "itemName", event.target.value)
-                  }
-                  options={[
-                    {
-                      label: "Select item",
-                      value: "",
-                    },
-                    ...items.map((product) => ({
-                      label: product.name || product.itemName || product,
-                      value: product.name || product.itemName || product,
-                    })),
-                  ]}
-                />
-
-                <Input
-                  label="Quantity"
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(event) =>
-                    handleItemChange(index, "quantity", event.target.value)
-                  }
-                  placeholder="Enter quantity"
-                />
-
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    disabled={form.items.length === 1}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-400/10 bg-red-400/[0.04] px-3 text-xs text-red-300/70 transition hover:border-red-400/25 hover:bg-red-400/[0.08] disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto"
-                  >
-                    <Trash2 className="h-4 w-4" />
-
-                    <span className="sm:hidden">Remove</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* =========================
-            DISPATCH DETAILS
-        ========================= */}
-
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           <Input
             label="E-Way Bill Number"
             name="eWayBillNumber"
@@ -760,49 +1015,237 @@ function Dispatch() {
             onChange={handleChange}
             placeholder="EWB-123456789"
           />
+        </div>
 
-          <Input
-            label="Weight"
-            name="weight"
-            type="number"
-            min="0"
-            value={form.weight}
-            onChange={handleChange}
-            placeholder="Enter weight"
-            required
-          />
+        {/* =========================
+            DISPATCH ITEMS
+        ========================= */}
 
-          <Input
-            label="Number of Bags"
-            name="numberOfBags"
-            type="number"
-            min="0"
-            value={form.numberOfBags}
-            onChange={handleChange}
-            placeholder="Enter number of bags"
-            required
-          />
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-black">Dispatch Items</p>
 
-          <div className="md:col-span-2 lg:col-span-3">
-            <Input
-              label="Delivery Challan"
-              name="deliveryChallan"
-              value={form.deliveryChallan}
-              onChange={handleChange}
-              placeholder="DC-2026-001"
-              required
-            />
+              <p className="mt-0.5 text-[10px] font-medium text-slate-500">
+                Add item, quantity, weight and number of bags.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={addItem}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-lime-200 bg-lime-50 px-2.5 py-1.5 text-[10px] font-bold text-lime-700 transition hover:border-lime-300 hover:bg-lime-100"
+            >
+              <Plus className="h-3 w-3" />
+              Add Item
+            </button>
           </div>
+
+          {/* TABLE HEADER */}
+
+          <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 rounded-t-lg border border-slate-200 bg-slate-50 px-2 py-2 text-[9px] font-bold uppercase tracking-wider text-slate-500 lg:grid">
+            <span>Item</span>
+
+            <span>Quantity</span>
+
+            <span>Weight (Kg)</span>
+
+            <span>No. of Bags</span>
+
+            <span>Action</span>
+          </div>
+
+          {/* ITEM ROWS */}
+
+          <div className="space-y-2 lg:space-y-0">
+            {form.items.map((item, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto] lg:items-end lg:rounded-none lg:border-t-0"
+              >
+                {/* ITEM */}
+
+                <div>
+                  <label className="mb-1 block text-[9px] font-semibold text-slate-600 lg:hidden">
+                    Item {index + 1}
+                  </label>
+
+                  <Select
+                    value={item.itemName}
+                    onChange={(event) =>
+                      handleItemChange(index, "itemName", event.target.value)
+                    }
+                    options={[
+                      {
+                        label: "Select item",
+                        value: "",
+                      },
+
+                      ...items.map((product) => ({
+                        label: product.name || product.itemName || product,
+
+                        value: product.name || product.itemName || product,
+                      })),
+                    ]}
+                  />
+                </div>
+
+                {/* QUANTITY */}
+
+                <div>
+                  <label className="mb-1 block text-[9px] font-semibold text-slate-600 lg:hidden">
+                    Quantity
+                  </label>
+
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(event) =>
+                      handleItemChange(index, "quantity", event.target.value)
+                    }
+                    placeholder="Quantity"
+                  />
+                </div>
+
+                {/* WEIGHT */}
+
+                <div>
+                  <label className="mb-1 block text-[9px] font-semibold text-slate-600 lg:hidden">
+                    Weight (Kg)
+                  </label>
+
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.weight}
+                    onChange={(event) =>
+                      handleItemChange(index, "weight", event.target.value)
+                    }
+                    placeholder="Weight"
+                  />
+                </div>
+
+                {/* BAGS */}
+
+                <div>
+                  <label className="mb-1 block text-[9px] font-semibold text-slate-600 lg:hidden">
+                    Number of Bags
+                  </label>
+
+                  <Input
+                    type="number"
+                    min="0"
+                    value={item.numberOfBags}
+                    onChange={(event) =>
+                      handleItemChange(
+                        index,
+                        "numberOfBags",
+                        event.target.value,
+                      )
+                    }
+                    placeholder="Bags"
+                  />
+                </div>
+
+                {/* DELETE */}
+
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    disabled={form.items.length === 1}
+                    className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2 text-[10px] font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-30 lg:w-9"
+                    title="Remove Item"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+
+                    <span className="lg:hidden">Remove</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* TOTALS */}
+
+          <div className="mt-2 flex flex-wrap justify-end gap-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="text-right">
+              <p className="text-[9px] font-bold uppercase text-slate-400">
+                Total Weight
+              </p>
+
+              <p className="text-xs font-bold text-black">
+                {getTotalWeight()} Kg
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-[9px] font-bold uppercase text-slate-400">
+                Total Bags
+              </p>
+
+              <p className="text-xs font-bold text-black">{getTotalBags()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================
+            DELIVERY CHALLAN
+        ========================= */}
+
+        <div className="mt-4">
+          <Input
+            label="Delivery Challan"
+            name="deliveryChallan"
+            value={form.deliveryChallan}
+            onChange={handleChange}
+            placeholder="DC-2026-001"
+            required
+          />
         </div>
 
         {/* =========================
             FORM ACTIONS
         ========================= */}
 
-        <div className="mt-6 flex flex-col-reverse gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
+        <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={resetForm}>
             Reset
           </Button>
+
+          {/* PRINT BUTTON */}
+
+          <button
+            type="button"
+            onClick={() => {
+              const validationError = validateForm();
+
+              if (validationError) {
+                setError(validationError);
+                return;
+              }
+
+              const previewDispatch = {
+                ...form,
+
+                weight: getTotalWeight(),
+
+                numberOfBags: getTotalBags(),
+
+                createdAt: new Date().toISOString(),
+              };
+
+              handlePrint(previewDispatch);
+            }}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-lime-300 hover:bg-lime-50 hover:text-lime-700"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Print
+          </button>
+
+          {/* SAVE */}
 
           <Button type="submit" disabled={loading}>
             {loading
@@ -817,34 +1260,34 @@ function Dispatch() {
       </form>
 
       {/* =========================
-          HISTORY
+          HISTORY HEADER
       ========================= */}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-lime-300/70">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-lime-600">
             Dispatch Records
           </p>
 
-          <h2 className="mt-2 text-xl font-bold text-white">
+          <h2 className="mt-1 text-lg font-bold text-black">
             Dispatch History
           </h2>
 
-          <p className="mt-1 text-xs text-white/35">
+          <p className="mt-0.5 text-[10px] font-medium text-slate-500">
             Review previously recorded dispatches.
           </p>
         </div>
 
-        <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
-          <div className="relative w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
+        <div className="flex w-full gap-2 sm:w-auto">
+          <div className="relative flex-1 sm:w-64 sm:flex-none">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
 
             <input
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search dispatches..."
-              className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.025] pl-9 pr-3 text-xs text-white outline-none placeholder:text-white/20 focus:border-lime-300/30"
+              className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-[10px] font-medium text-black outline-none placeholder:text-slate-400 transition focus:border-lime-400 focus:ring-2 focus:ring-lime-100"
             />
           </div>
 
@@ -852,10 +1295,10 @@ function Dispatch() {
             type="button"
             onClick={fetchDispatches}
             disabled={fetching}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-4 text-xs text-white/50 transition hover:border-white/20 hover:text-white disabled:opacity-40"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-black disabled:opacity-40"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${fetching ? "animate-spin" : ""}`}
+              className={`h-3 w-3 ${fetching ? "animate-spin" : ""}`}
             />
             Refresh
           </button>
@@ -866,45 +1309,45 @@ function Dispatch() {
           HISTORY TABLE
       ========================= */}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {fetching && dispatches.length === 0 ? (
-          <div className="flex min-h-48 items-center justify-center text-sm text-white/30">
+          <div className="flex min-h-36 items-center justify-center text-xs font-medium text-slate-500">
             Loading dispatch records...
           </div>
         ) : filteredDispatches.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center px-5 text-center">
-            <Truck className="h-8 w-8 text-white/15" />
+          <div className="flex min-h-36 flex-col items-center justify-center px-5 text-center">
+            <Truck className="h-7 w-7 text-slate-300" />
 
-            <p className="mt-3 text-sm text-white/40">
+            <p className="mt-2 text-xs font-semibold text-slate-600">
               No dispatch records found.
             </p>
 
-            <p className="mt-1 text-xs text-white/20">
+            <p className="mt-0.5 text-[10px] font-medium text-slate-400">
               Create your first dispatch using the form above.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] text-left">
+            <table className="w-full min-w-[1200px] text-left">
               <thead>
-                <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-white/25">
-                  <th className="px-5 py-4 font-medium">Inspection</th>
+                <tr className="border-b border-slate-200 bg-slate-50 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                  <th className="px-3 py-2.5 font-bold">Inspection</th>
 
-                  <th className="px-5 py-4 font-medium">Vendor</th>
+                  <th className="px-3 py-2.5 font-bold">Vendor</th>
 
-                  <th className="px-5 py-4 font-medium">Items</th>
+                  <th className="px-3 py-2.5 font-bold">Items</th>
 
-                  <th className="px-5 py-4 font-medium">Quality</th>
+                  <th className="px-3 py-2.5 font-bold">Invoice</th>
 
-                  <th className="px-5 py-4 font-medium">Invoice</th>
+                  <th className="px-3 py-2.5 font-bold">E-Way Bill</th>
 
-                  <th className="px-5 py-4 font-medium">Weight</th>
+                  <th className="px-3 py-2.5 font-bold">Weight</th>
 
-                  <th className="px-5 py-4 font-medium">Bags</th>
+                  <th className="px-3 py-2.5 font-bold">Bags</th>
 
-                  <th className="px-5 py-4 font-medium">Date</th>
+                  <th className="px-3 py-2.5 font-bold">Date</th>
 
-                  <th className="px-5 py-4 text-right font-medium">Actions</th>
+                  <th className="px-3 py-2.5 text-right font-bold">Actions</th>
                 </tr>
               </thead>
 
@@ -912,38 +1355,35 @@ function Dispatch() {
                 {filteredDispatches.map((dispatch) => (
                   <tr
                     key={dispatch._id}
-                    className="border-b border-white/5 transition hover:bg-white/[0.02]"
+                    className="border-b border-slate-100 transition hover:bg-slate-50"
                   >
-                    <td className="px-5 py-4">
+                    <td className="px-3 py-2.5">
                       <div>
-                        <p className="text-xs font-medium text-white">
+                        <p className="text-[10px] font-semibold text-black">
                           {dispatch.inspectionReport}
                         </p>
 
-                        <p className="mt-1 text-[11px] text-white/25">
+                        <p className="mt-0.5 text-[9px] font-medium text-slate-400">
                           {dispatch.deliveryChallan}
                         </p>
                       </div>
                     </td>
 
-                    <td className="px-5 py-4 text-xs text-white/60">
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-600">
                       {dispatch.vendorName}
                     </td>
 
-                    <td className="px-5 py-4">
-                      <div className="space-y-1">
-                        {dispatch.items?.map((item) => (
-                          <div
-                            key={item._id}
-                            className="flex items-center gap-2 text-xs"
-                          >
-                            <span className="text-white/60">
+                    <td className="px-3 py-2.5">
+                      <div className="space-y-0.5">
+                        {dispatch.items?.map((item, index) => (
+                          <div key={item._id || index} className="text-[10px]">
+                            <span className="font-medium text-slate-600">
                               {item.itemName}
                             </span>
 
-                            <span className="text-white/25">×</span>
+                            <span className="mx-1 text-slate-300">×</span>
 
-                            <span className="text-white/40">
+                            <span className="font-semibold text-slate-500">
                               {item.quantity}
                             </span>
                           </div>
@@ -951,51 +1391,62 @@ function Dispatch() {
                       </div>
                     </td>
 
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-medium ${getQualityClasses(
-                          dispatch.qualityResult,
-                        )}`}
-                      >
-                        {dispatch.qualityResult}
-                      </span>
-                    </td>
-
-                    <td className="px-5 py-4 text-xs text-white/50">
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-500">
                       {dispatch.invoiceNumber}
                     </td>
 
-                    <td className="px-5 py-4 text-xs text-white/50">
-                      {dispatch.weight}
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-500">
+                      {dispatch.eWayBillNumber || "-"}
                     </td>
 
-                    <td className="px-5 py-4 text-xs text-white/50">
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-500">
+                      {dispatch.weight} Kg
+                    </td>
+
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-500">
                       {dispatch.numberOfBags}
                     </td>
 
-                    <td className="px-5 py-4 text-xs text-white/40">
+                    <td className="px-3 py-2.5 text-[10px] font-medium text-slate-500">
                       {formatDate(dispatch.createdAt)}
                     </td>
 
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-2">
+                    {/* ACTIONS */}
+
+                    <td className="px-3 py-2.5">
+                      <div className="flex justify-end gap-1.5">
+                        {/* PRINT */}
+
+                        <button
+                          type="button"
+                          onClick={() => handlePrint(dispatch)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-lime-300 hover:bg-lime-50 hover:text-lime-700"
+                          title="Print Dispatch"
+                        >
+                          <Printer className="h-3 w-3" />
+                        </button>
+
+                        {/* EDIT */}
+
                         <button
                           type="button"
                           onClick={() => handleEdit(dispatch)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-lime-300/20 hover:text-lime-300"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-lime-300 hover:bg-lime-50 hover:text-lime-700"
                           title="Edit"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Pencil className="h-3 w-3" />
                         </button>
+
+                        {/* DELETE */}
 
                         <button
                           type="button"
                           onClick={() => handleDelete(dispatch._id)}
                           disabled={deletingId === dispatch._id}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/40 transition hover:border-red-400/20 hover:text-red-300 disabled:opacity-40"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                           title="Delete"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
                     </td>

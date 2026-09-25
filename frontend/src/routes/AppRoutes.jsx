@@ -8,10 +8,19 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Login from "../pages/auth/Login";
 import Signup from "../pages/auth/Signup";
 import Dashboard from "../pages/dashboard/Dashboard";
+
 import InwardSupply from "../pages/inward/InwardSupply";
+import InwardSupplyList from "../pages/inward/InwardSupplyList";
+
+import Vendors from "../pages/vendor/Vendors";
+
 import ProductionRecord from "../pages/production/ProductionRecord";
+import FinalProduction from "../pages/production/FinalProduction";
+
 import QualityInspection from "../pages/quality/QualityInspection";
 import Dispatch from "../pages/dispatch/Dispatch";
+
+import Items from "../pages/masters/Items";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -26,10 +35,25 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* =========================
+          AUTHENTICATION ROUTES
+      ========================= */}
+
       <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/signup"
+          element={<Signup />}
+        />
       </Route>
+
+      {/* =========================
+          PROTECTED DASHBOARD ROUTES
+      ========================= */}
 
       <Route
         element={
@@ -38,20 +62,101 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Dashboard */}
 
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
 
-        <Route path="/process/inward" element={<InwardSupply />} />
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-        <Route path="/process/production" element={<ProductionRecord />} />
+        {/* =========================
+            MASTERS
+        ========================= */}
 
-        <Route path="/process/quality" element={<QualityInspection />} />
+        <Route
+          path="/items"
+          element={<Items />}
+        />
 
-        <Route path="/process/dispatch" element={<Dispatch />} />
+        {/* =========================
+            VENDOR MANAGEMENT
+        ========================= */}
+
+        <Route
+          path="/vendors"
+          element={<Vendors />}
+        />
+
+        {/* =========================
+            INWARD SUPPLY
+        ========================= */}
+
+        <Route
+          path="/process/inward"
+          element={<InwardSupply />}
+        />
+
+        <Route
+          path="/process/inward/list"
+          element={<InwardSupplyList />}
+        />
+
+        {/* =========================
+            PRODUCTION
+        ========================= */}
+
+        <Route
+          path="/process/production"
+          element={<ProductionRecord />}
+        />
+
+        <Route
+          path="/process/final-production"
+          element={<FinalProduction />}
+        />
+
+        {/* =========================
+            QUALITY INSPECTION
+        ========================= */}
+
+        <Route
+          path="/process/quality"
+          element={<QualityInspection />}
+        />
+
+        {/* =========================
+            DISPATCH
+        ========================= */}
+
+        <Route
+          path="/process/dispatch"
+          element={<Dispatch />}
+        />
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* =========================
+          UNKNOWN ROUTE
+      ========================= */}
+
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to="/dashboard"
+            replace
+          />
+        }
+      />
     </Routes>
   );
 }
