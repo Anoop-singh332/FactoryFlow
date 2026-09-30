@@ -1,225 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
-  FileText,
   PackageCheck,
   Upload,
   X,
-  ChevronDown,
-  Trash2,
+  Save,
 } from "lucide-react";
 
 import PageHeader from "../../components/PageHeader";
-import Button from "../../components/ui/Button";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:5000/api";
 
-const defaultMaterialTypes = [
-  "Raw Material",
-  "Semi Finished",
-  "Consumable",
-];
-
-const defaultMaterialItems = [
-  "Steel Rod",
-  "Steel Sheet",
-  "Aluminium Pipe",
-  "Copper Wire",
-];
-
-function TypeableDropdown({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-  onDelete,
-  required = false,
-}) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(event.target)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener(
-      "mousedown",
-      handleOutsideClick,
-    );
-
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick,
-      );
-    };
-  }, []);
-
-  const filteredOptions = options.filter((option) =>
-    option
-      .toLowerCase()
-      .includes(value.toLowerCase()),
-  );
-
-  return (
-    <div
-      ref={wrapperRef}
-      className="relative"
-    >
-      <label className="mb-1.5 block text-xs font-semibold text-black">
-        {label}
-
-        {required && (
-          <span className="ml-1 text-lime-600">
-            *
-          </span>
-        )}
-      </label>
-
-      <div className="relative">
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => {
-            onChange(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder={placeholder}
-          required={required}
-          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-sm font-medium text-black outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:ring-2 focus:ring-lime-100"
-        />
-
-        <button
-          type="button"
-          onClick={() =>
-            setOpen((previous) => !previous)
-          }
-          className="absolute right-0 top-0 flex h-full w-10 items-center justify-center text-slate-500 transition hover:text-lime-600"
-        >
-          <ChevronDown
-            className={`h-4 w-4 transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-      </div>
-
-      {open && (
-        <div className="absolute left-0 right-0 z-50 mt-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-          <div className="max-h-44 overflow-y-auto p-1.5">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <div
-                  key={option}
-                  className="flex items-center rounded-lg transition hover:bg-lime-50"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(option);
-                      setOpen(false);
-                    }}
-                    className="flex-1 px-3 py-2 text-left text-xs font-medium text-black hover:text-black"
-                  >
-                    {option}
-                  </button>
-
-                  {onDelete && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onDelete(option)
-                      }
-                      className="mr-1 rounded-md p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-2.5 text-xs font-medium text-black">
-                No saved option found.
-              </div>
-            )}
-          </div>
-
-          {value.trim() &&
-            !options.some(
-              (option) =>
-                option.toLowerCase() ===
-                value.trim().toLowerCase(),
-            ) && (
-              <div className="border-t border-slate-200 bg-lime-50 px-3 py-2">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-black">
-                  New value
-                </p>
-
-                <p className="mt-0.5 text-xs font-semibold text-lime-700">
-                  {value}
-                </p>
-              </div>
-            )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function FixedUnitInput({
-  label,
-  value,
-  onChange,
-  unit,
-  placeholder,
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold text-black">
-        {label}
-
-        <span className="ml-1 text-lime-600">
-          *
-        </span>
-      </label>
-
-      <div className="flex h-10 overflow-hidden rounded-xl border border-slate-200 bg-white transition focus-within:border-lime-500 focus-within:ring-2 focus-within:ring-lime-100">
-        <input
-          type="number"
-          value={value}
-          onChange={(event) =>
-            onChange(event.target.value)
-          }
-          placeholder={placeholder}
-          min="0"
-          step="any"
-          required
-          className="min-w-0 flex-1 bg-transparent px-3.5 text-sm font-medium text-black outline-none placeholder:text-slate-400"
-        />
-
-        <div className="flex min-w-[55px] items-center justify-center border-l border-slate-200 bg-slate-50 px-2 text-xs font-bold text-black">
-          {unit}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function InwardSupply() {
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     vendorName: "",
     invoiceNumber: "",
+    numberOfItems: "",
     materialWeight: "",
     materialSize: "",
     materialType: "",
@@ -229,226 +27,114 @@ function InwardSupply() {
 
   const [vendors, setVendors] = useState([]);
 
-  const [materialTypes, setMaterialTypes] =
-    useState(defaultMaterialTypes);
+  const [documentFile, setDocumentFile] =
+    useState(null);
 
-  const [materialItems, setMaterialItems] =
-    useState(defaultMaterialItems);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [documents, setDocuments] = useState([]);
+  const [loadingVendors, setLoadingVendors] =
+    useState(true);
 
-  const [saved, setSaved] = useState(false);
-  const [savedBatchNo, setSavedBatchNo] =
+  const [error, setError] =
     useState("");
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] =
+    useState("");
+
+  // =========================================================
+  // LOAD VENDORS
+  // =========================================================
 
   useEffect(() => {
-    const savedTypes = localStorage.getItem(
-      "factoryflow_material_types",
-    );
-
-    if (savedTypes) {
+    const loadVendors = async () => {
       try {
-        const parsed = JSON.parse(savedTypes);
+        setLoadingVendors(true);
 
-        if (Array.isArray(parsed)) {
-          setMaterialTypes(parsed);
-        }
-      } catch (error) {
-        console.error(
-          "Error loading material types:",
-          error,
+        const token =
+          localStorage.getItem(
+            "factoryflow_token"
+          );
+
+        const response = await fetch(
+          `${API_URL}/vendors`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-      }
-    }
 
-    const savedItems = localStorage.getItem(
-      "factoryflow_material_items",
-    );
+        const data =
+          await response.json();
 
-    if (savedItems) {
-      try {
-        const parsed = JSON.parse(savedItems);
-
-        if (Array.isArray(parsed)) {
-          setMaterialItems(parsed);
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              "Failed to load vendors."
+          );
         }
-      } catch (error) {
-        console.error(
-          "Error loading material items:",
-          error,
+
+        setVendors(
+          Array.isArray(data?.data)
+            ? data.data
+            : []
         );
+      } catch (err) {
+        console.error(
+          "Load vendors error:",
+          err
+        );
+      } finally {
+        setLoadingVendors(false);
       }
-    }
+    };
+
+    loadVendors();
   }, []);
 
-  const fetchVendors = async () => {
-    try {
-      const token =
-        localStorage.getItem(
-          "factoryflow_token",
-        );
+  // =========================================================
+  // HANDLE CHANGE
+  // =========================================================
 
-      const response = await fetch(
-        `${API_URL}/vendors`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+  const handleChange = (e) => {
+    const {
+      name,
+      value,
+    } = e.target;
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setVendors(data.data || []);
-      }
-    } catch (error) {
-      console.error(
-        "Fetch Vendors Error:",
-        error,
-      );
-    }
-  };
-
-  useEffect(() => {
-    fetchVendors();
-  }, []);
-
-  const handleChange = (event) => {
-    setForm((previous) => ({
+    setFormData((previous) => ({
       ...previous,
-      [event.target.name]:
-        event.target.value,
+      [name]: value,
     }));
 
     setError("");
-    setSaved(false);
+    setSuccess("");
   };
 
-  const handleDocuments = (event) => {
-    const files = Array.from(
-      event.target.files || [],
-    );
+  // =========================================================
+  // DOCUMENT
+  // =========================================================
 
-    setDocuments((previous) => [
-      ...previous,
-      ...files,
-    ]);
+  const handleDocumentChange = (e) => {
+    const file =
+      e.target.files?.[0] || null;
 
-    event.target.value = "";
+    setDocumentFile(file);
+
     setError("");
+    setSuccess("");
   };
 
-  const removeDocument = (index) => {
-    setDocuments((previous) =>
-      previous.filter(
-        (_, fileIndex) =>
-          fileIndex !== index,
-      ),
-    );
-  };
-
-  const saveMaterialType = (value) => {
-    const newValue = value.trim();
-
-    if (!newValue) return;
-
-    const exists = materialTypes.some(
-      (item) =>
-        item.toLowerCase() ===
-        newValue.toLowerCase(),
-    );
-
-    if (!exists) {
-      const updated = [
-        ...materialTypes,
-        newValue,
-      ];
-
-      setMaterialTypes(updated);
-
-      localStorage.setItem(
-        "factoryflow_material_types",
-        JSON.stringify(updated),
-      );
-    }
-  };
-
-  const saveMaterialItem = (value) => {
-    const newValue = value.trim();
-
-    if (!newValue) return;
-
-    const exists = materialItems.some(
-      (item) =>
-        item.toLowerCase() ===
-        newValue.toLowerCase(),
-    );
-
-    if (!exists) {
-      const updated = [
-        ...materialItems,
-        newValue,
-      ];
-
-      setMaterialItems(updated);
-
-      localStorage.setItem(
-        "factoryflow_material_items",
-        JSON.stringify(updated),
-      );
-    }
-  };
-
-  const deleteMaterialType = (value) => {
-    const updated = materialTypes.filter(
-      (item) => item !== value,
-    );
-
-    setMaterialTypes(updated);
-
-    localStorage.setItem(
-      "factoryflow_material_types",
-      JSON.stringify(updated),
-    );
-
-    if (form.materialType === value) {
-      setForm((previous) => ({
-        ...previous,
-        materialType: "",
-      }));
-    }
-  };
-
-  const deleteMaterialItem = (value) => {
-    const updated = materialItems.filter(
-      (item) => item !== value,
-    );
-
-    setMaterialItems(updated);
-
-    localStorage.setItem(
-      "factoryflow_material_items",
-      JSON.stringify(updated),
-    );
-
-    if (
-      form.materialItemName === value
-    ) {
-      setForm((previous) => ({
-        ...previous,
-        materialItemName: "",
-      }));
-    }
-  };
+  // =========================================================
+  // RESET
+  // =========================================================
 
   const resetForm = () => {
-    setForm({
+    setFormData({
       vendorName: "",
       invoiceNumber: "",
+      numberOfItems: "",
       materialWeight: "",
       materialSize: "",
       materialType: "",
@@ -456,117 +142,146 @@ function InwardSupply() {
       receivedBy: "",
     });
 
-    setDocuments([]);
+    setDocumentFile(null);
+
+    const input =
+      window.document.getElementById(
+        "inward-document"
+      );
+
+    if (input) {
+      input.value = "";
+    }
+
     setError("");
-    setSaved(false);
-    setSavedBatchNo("");
+    setSuccess("");
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  // =========================================================
+  // SUBMIT
+  // =========================================================
 
-    setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     setError("");
-    setSaved(false);
-    setSavedBatchNo("");
+    setSuccess("");
+
+    // -------------------------------------------------------
+    // VALIDATION
+    // -------------------------------------------------------
+
+    if (!formData.vendorName.trim()) {
+      setError("Please select a vendor.");
+      return;
+    }
+
+    if (!formData.invoiceNumber.trim()) {
+      setError(
+        "Please enter invoice number."
+      );
+      return;
+    }
+
+    if (
+      !formData.numberOfItems ||
+      Number(formData.numberOfItems) <= 0
+    ) {
+      setError(
+        "Please enter a valid number of items."
+      );
+      return;
+    }
+
+    if (!formData.materialWeight.trim()) {
+      setError(
+        "Please enter material weight."
+      );
+      return;
+    }
+
+    if (!formData.materialSize.trim()) {
+      setError(
+        "Please enter material size."
+      );
+      return;
+    }
+
+    if (!formData.materialType.trim()) {
+      setError(
+        "Please enter material type."
+      );
+      return;
+    }
+
+    if (!formData.materialItemName.trim()) {
+      setError(
+        "Please enter material item name."
+      );
+      return;
+    }
+
+    if (!formData.receivedBy.trim()) {
+      setError(
+        "Please enter received by."
+      );
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const token =
         localStorage.getItem(
-          "factoryflow_token",
+          "factoryflow_token"
         );
 
-      if (!token) {
-        setError(
-          "You are not logged in. Please login again.",
-        );
+      const body = new FormData();
 
-        return;
-      }
-
-      if (
-        !form.vendorName.trim() ||
-        !form.invoiceNumber.trim() ||
-        !form.materialWeight ||
-        !form.materialSize ||
-        !form.materialType.trim() ||
-        !form.materialItemName.trim() ||
-        !form.receivedBy.trim()
-      ) {
-        setError(
-          "All required fields must be filled.",
-        );
-
-        return;
-      }
-
-      const existingVendor = vendors.find(
-        (vendor) =>
-          vendor.name
-            .trim()
-            .toLowerCase() ===
-          form.vendorName
-            .trim()
-            .toLowerCase(),
-      );
-
-      if (!existingVendor) {
-        setError(
-          "Vendor not found. Please create the vendor from the Vendors tab first.",
-        );
-
-        return;
-      }
-
-      saveMaterialType(
-        form.materialType,
-      );
-
-      saveMaterialItem(
-        form.materialItemName,
-      );
-
-      const formData = new FormData();
-
-      formData.append(
+      body.append(
         "vendorName",
-        form.vendorName.trim(),
+        formData.vendorName.trim()
       );
 
-      formData.append(
+      body.append(
         "invoiceNumber",
-        form.invoiceNumber.trim(),
+        formData.invoiceNumber.trim()
       );
 
-      formData.append(
+      body.append(
+        "numberOfItems",
+        formData.numberOfItems
+      );
+
+      body.append(
         "materialWeight",
-        form.materialWeight,
+        formData.materialWeight.trim()
       );
 
-      formData.append(
+      body.append(
         "materialSize",
-        form.materialSize,
+        formData.materialSize.trim()
       );
 
-      formData.append(
+      body.append(
         "materialType",
-        form.materialType.trim(),
+        formData.materialType.trim()
       );
 
-      formData.append(
+      body.append(
         "materialItemName",
-        form.materialItemName.trim(),
+        formData.materialItemName.trim()
       );
 
-      formData.append(
+      body.append(
         "receivedBy",
-        form.receivedBy.trim(),
+        formData.receivedBy.trim()
       );
 
-      if (documents.length > 0) {
-        formData.append(
+      if (documentFile) {
+        body.append(
           "document",
-          documents[0],
+          documentFile
         );
       }
 
@@ -574,415 +289,538 @@ function InwardSupply() {
         `${API_URL}/inward`,
         {
           method: "POST",
+
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          body: formData,
-        },
+
+          body,
+        }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            "Failed to save inward supply.",
+          data?.message ||
+            "Failed to create inward supply."
         );
       }
 
-      const generatedBatchNo =
-        data?.data?.batchNo || "";
-
-      setSavedBatchNo(
-        generatedBatchNo,
+      setSuccess(
+        data?.message ||
+          "Inward supply created successfully."
       );
-
-      await fetchVendors();
-
-      setSaved(true);
 
       resetForm();
-
-      setSaved(true);
-      setSavedBatchNo(
-        generatedBatchNo,
-      );
-
-      setTimeout(() => {
-        setSaved(false);
-        setSavedBatchNo("");
-      }, 5000);
-    } catch (error) {
+    } catch (err) {
       console.error(
-        "Create Inward Supply Error:",
-        error,
+        "Create inward supply error:",
+        err
       );
 
       setError(
-        error.message ||
-          "Something went wrong while saving the record.",
+        err.message ||
+          "Unable to create inward supply."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================================================
+  // UI
+  // =========================================================
+
   return (
-    <div className="mx-auto flex h-[calc(100vh-85px)] min-h-0 max-w-[1400px] flex-col overflow-hidden">
+    <div className="min-h-full p-3 sm:p-4">
 
-      {/* ================= PAGE HEADER ================= */}
+      {/* =====================================================
+          PAGE HEADER
+      ===================================================== */}
 
-      <div className="shrink-0">
-        <PageHeader
-          eyebrow="Process Management / Material In"
-          title="Inward Supply"
-          description="Record incoming material, vendor information and supporting documents."
-        />
+      <div className="mb-3">
+
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-lime-600">
+          Process Management / Material In
+        </p>
+
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-black">
+          Inward Supply
+        </h1>
+
+        <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+          Create and manage received material
+          records.
+        </p>
+
       </div>
 
-      {/* ================= SUCCESS MESSAGE ================= */}
+      {/* =====================================================
+          SUCCESS
+      ===================================================== */}
 
-      {saved && (
-        <div className="mb-2 shrink-0 rounded-xl border border-lime-200 bg-lime-50 px-4 py-2 text-xs font-medium text-black">
-          <div className="flex items-center gap-2">
-
-            <span>
-              Inward supply record saved successfully.
-            </span>
-
-            {savedBatchNo && (
-              <span className="font-bold text-lime-700">
-                Batch No: {savedBatchNo}
-              </span>
-            )}
-
-          </div>
+      {success && (
+        <div className="mb-3 rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-[11px] font-semibold text-lime-700">
+          {success}
         </div>
       )}
 
-      {/* ================= ERROR MESSAGE ================= */}
+      {/* =====================================================
+          ERROR
+      ===================================================== */}
 
       {error && (
-        <div className="mb-2 shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700">
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-600">
           {error}
         </div>
       )}
 
+      {/* =====================================================
+          FORM
+      ===================================================== */}
+
       <form
         onSubmit={handleSubmit}
-        className="min-h-0 flex-1 overflow-hidden"
+        autoComplete="off"
+        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
       >
-        <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[1fr_290px]">
 
-          {/* ================= LEFT - MATERIAL RECEIPT ================= */}
+        {/* ===================================================
+            FORM TITLE
+        =================================================== */}
 
-          <div className="h-fit overflow-visible rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-3">
 
-            <div className="mb-4 flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-lime-200 bg-lime-50">
-                <PackageCheck className="h-4 w-4 text-lime-600" />
-              </div>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-lime-200 bg-lime-50">
 
-              <div>
-                <h2 className="text-base font-bold text-black">
-                  Material Receipt
-                </h2>
-
-                <p className="mt-0.5 text-[10px] font-medium text-black">
-                  Enter received material details.
-                </p>
-              </div>
+              <PackageCheck className="h-4 w-4 text-lime-600" />
 
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div>
 
-              {/* ================= VENDOR ================= */}
+              <h2 className="text-sm font-bold text-black">
+                Inward Supply Information
+              </h2>
 
-              <TypeableDropdown
-                label="Vendor Name"
-                value={form.vendorName}
-                onChange={(value) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    vendorName: value,
-                  }))
-                }
-                options={vendors.map(
-                  (vendor) => vendor.name,
-                )}
-                placeholder="Type or select vendor"
-                required
-              />
-
-              {/* ================= INVOICE ================= */}
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-black">
-                  Invoice Number
-
-                  <span className="ml-1 text-lime-600">
-                    *
-                  </span>
-                </label>
-
-                <input
-                  type="text"
-                  name="invoiceNumber"
-                  value={
-                    form.invoiceNumber
-                  }
-                  onChange={handleChange}
-                  placeholder="INV-2026-0001"
-                  required
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-black outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:ring-2 focus:ring-lime-100"
-                />
-              </div>
-
-              {/* ================= WEIGHT ================= */}
-
-              <FixedUnitInput
-                label="Material Weight"
-                value={
-                  form.materialWeight
-                }
-                onChange={(value) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    materialWeight: value,
-                  }))
-                }
-                unit="Kg"
-                placeholder="Enter weight"
-              />
-
-              {/* ================= SIZE ================= */}
-
-              <FixedUnitInput
-                label="Material Size"
-                value={
-                  form.materialSize
-                }
-                onChange={(value) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    materialSize: value,
-                  }))
-                }
-                unit="mm"
-                placeholder="Enter size"
-              />
-
-              {/* ================= MATERIAL TYPE ================= */}
-
-              <TypeableDropdown
-                label="Material Type"
-                value={
-                  form.materialType
-                }
-                onChange={(value) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    materialType: value,
-                  }))
-                }
-                options={materialTypes}
-                placeholder="Type or select material type"
-                required
-                onDelete={
-                  deleteMaterialType
-                }
-              />
-
-              {/* ================= MATERIAL ITEM ================= */}
-
-              <TypeableDropdown
-                label="Material Item Name"
-                value={
-                  form.materialItemName
-                }
-                onChange={(value) =>
-                  setForm((previous) => ({
-                    ...previous,
-                    materialItemName:
-                      value,
-                  }))
-                }
-                options={materialItems}
-                placeholder="Type or select material item"
-                required
-                onDelete={
-                  deleteMaterialItem
-                }
-              />
-
-              {/* ================= RECEIVED BY ================= */}
-
-              <div className="sm:col-span-2">
-
-                <label className="mb-1.5 block text-xs font-semibold text-black">
-                  Received By
-
-                  <span className="ml-1 text-lime-600">
-                    *
-                  </span>
-                </label>
-
-                <input
-                  type="text"
-                  name="receivedBy"
-                  value={
-                    form.receivedBy
-                  }
-                  onChange={handleChange}
-                  placeholder="Employee / receiver name"
-                  required
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-black outline-none transition placeholder:text-slate-400 focus:border-lime-500 focus:ring-2 focus:ring-lime-100"
-                />
-
-              </div>
-
-            </div>
-          </div>
-
-          {/* ================= RIGHT SIDE ================= */}
-
-          <div className="flex min-h-0 flex-col gap-3">
-
-            {/* ================= DOCUMENTS ================= */}
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-
-              <div className="flex items-center gap-2.5">
-
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-50">
-                  <FileText className="h-4 w-4 text-lime-600" />
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-bold text-black">
-                    Documents
-                  </h3>
-
-                  <p className="mt-0.5 text-[9px] font-medium text-black">
-                    Upload supporting documents.
-                  </p>
-                </div>
-
-              </div>
-
-              <label className="mt-3 flex h-[105px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 text-center transition hover:border-lime-400 hover:bg-lime-50">
-
-                <Upload className="h-5 w-5 text-lime-600" />
-
-                <p className="mt-2 text-[11px] font-semibold text-black">
-                  Upload documents
-                </p>
-
-                <p className="mt-0.5 text-[9px] font-medium text-black">
-                  PDF, JPG, PNG or DOC
-                </p>
-
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  className="hidden"
-                  onChange={
-                    handleDocuments
-                  }
-                />
-              </label>
-
-              {documents.length > 0 && (
-                <div className="mt-2 max-h-20 space-y-1 overflow-y-auto">
-
-                  {documents.map(
-                    (file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1.5"
-                      >
-
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-lime-600" />
-
-                        <p className="min-w-0 flex-1 truncate text-[10px] font-medium text-black">
-                          {file.name}
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeDocument(
-                              index,
-                            )
-                          }
-                          className="rounded p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-
-                      </div>
-                    ),
-                  )}
-
-                </div>
-              )}
-
-            </div>
-
-            {/* ================= STATUS ================= */}
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-
-              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-black">
-                Entry status
+              <p className="text-[10px] font-medium text-slate-500">
+                Enter received material details.
               </p>
 
-              <div className="mt-2 flex items-center gap-2">
+            </div>
 
-                <span className="h-1.5 w-1.5 rounded-full bg-lime-500" />
+          </div>
 
-                <span className="text-[11px] font-semibold text-black">
-                  {loading
-                    ? "Saving record..."
-                    : "Ready to receive"}
-                </span>
+        </div>
 
+        {/* ===================================================
+            BASIC INFORMATION
+        =================================================== */}
+
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+
+          {/* =================================================
+              VENDOR
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Vendor Name
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <select
+              name="vendorName"
+              value={formData.vendorName}
+              onChange={handleChange}
+              required
+              disabled={loadingVendors}
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            >
+
+              <option value="">
+                {loadingVendors
+                  ? "Loading vendors..."
+                  : "Select Vendor"}
+              </option>
+
+              {vendors.map((vendor) => (
+                <option
+                  key={
+                    vendor._id ||
+                    vendor.id ||
+                    vendor.vendorName ||
+                    vendor.name
+                  }
+                  value={
+                    vendor.vendorName ||
+                    vendor.name ||
+                    ""
+                  }
+                >
+                  {vendor.vendorName ||
+                    vendor.name ||
+                    "-"}
+                </option>
+              ))}
+
+            </select>
+
+          </div>
+
+          {/* =================================================
+              INVOICE
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Invoice Number
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <input
+              type="text"
+              name="invoiceNumber"
+              value={formData.invoiceNumber}
+              onChange={handleChange}
+              placeholder="Enter invoice number"
+              required
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            />
+
+          </div>
+
+          {/* =================================================
+              NUMBER OF ITEMS
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Number of Items
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <input
+              type="number"
+              name="numberOfItems"
+              value={formData.numberOfItems}
+              onChange={handleChange}
+              min="1"
+              step="1"
+              placeholder="Example: 100"
+              required
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            />
+
+          </div>
+
+          {/* =================================================
+              MATERIAL WEIGHT
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Material Weight
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <div className="flex h-9 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+
+              <input
+                type="number"
+                name="materialWeight"
+                value={formData.materialWeight}
+                onChange={handleChange}
+                min="0"
+                step="any"
+                placeholder="Enter weight"
+                required
+                className="min-w-0 flex-1 bg-transparent px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400"
+              />
+
+              <div className="flex items-center border-l border-slate-200 bg-white px-2.5 text-[10px] font-bold text-black">
+                Kg
               </div>
 
             </div>
 
-            {/* ================= BUTTONS ================= */}
+          </div>
 
-            <div className="flex justify-end gap-2">
+          {/* =================================================
+              MATERIAL SIZE
+          ================================================= */}
 
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={resetForm}
-                disabled={loading}
-              >
-                Clear
-              </Button>
+          <div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-              >
-                <PackageCheck className="h-4 w-4" />
+            <label className="mb-1 block text-[11px] font-semibold text-black">
 
-                {loading
-                  ? "Saving..."
-                  : "Save Inward Record"}
-              </Button>
+              Material Size
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <div className="flex h-9 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+
+              <input
+                type="text"
+                name="materialSize"
+                value={formData.materialSize}
+                onChange={handleChange}
+                placeholder="Enter size"
+                required
+                className="min-w-0 flex-1 bg-transparent px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400"
+              />
+
+              <div className="flex items-center border-l border-slate-200 bg-white px-2.5 text-[10px] font-bold text-black">
+                mm
+              </div>
 
             </div>
 
           </div>
+
+          {/* =================================================
+              MATERIAL TYPE
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Material Type
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <input
+              type="text"
+              name="materialType"
+              value={formData.materialType}
+              onChange={handleChange}
+              placeholder="Example: Hex 17"
+              required
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            />
+
+          </div>
+
+          {/* =================================================
+              ITEM NAME
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Material Item Name
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <input
+              type="text"
+              name="materialItemName"
+              value={
+                formData.materialItemName
+              }
+              onChange={handleChange}
+              placeholder="Example: RV Bush"
+              required
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            />
+
+          </div>
+
+          {/* =================================================
+              RECEIVED BY
+          ================================================= */}
+
+          <div>
+
+            <label className="mb-1 block text-[11px] font-semibold text-black">
+
+              Received By
+
+              <span className="ml-1 text-lime-600">
+                *
+              </span>
+
+            </label>
+
+            <input
+              type="text"
+              name="receivedBy"
+              value={formData.receivedBy}
+              onChange={handleChange}
+              placeholder="Enter receiver name"
+              required
+              className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-black outline-none placeholder:text-slate-400 focus:border-lime-500 focus:bg-white focus:ring-2 focus:ring-lime-100"
+            />
+
+          </div>
+
         </div>
+
+        {/* ===================================================
+            DOCUMENT
+        =================================================== */}
+
+        <div className="mt-4">
+
+          <div className="mb-1.5">
+
+            <h2 className="text-xs font-bold text-black">
+              Inward Document
+            </h2>
+
+            <p className="text-[10px] text-slate-500">
+              Upload invoice, drawing or related
+              material document.
+            </p>
+
+          </div>
+
+          <label
+            htmlFor="inward-document"
+            className="flex min-h-[58px] cursor-pointer items-center justify-center gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 transition hover:border-lime-400 hover:bg-lime-50"
+          >
+
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-lime-100">
+
+              <Upload className="h-3.5 w-3.5 text-lime-700" />
+
+            </div>
+
+            <div>
+
+              <p className="text-[11px] font-semibold text-black">
+
+                {documentFile
+                  ? documentFile.name
+                  : "Click to upload document"}
+
+              </p>
+
+              <p className="text-[9px] text-slate-500">
+                PDF, DOC, DOCX, JPG or PNG
+              </p>
+
+            </div>
+
+          </label>
+
+          <input
+            id="inward-document"
+            type="file"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            onChange={
+              handleDocumentChange
+            }
+            className="hidden"
+          />
+
+          {documentFile && (
+            <div className="mt-1.5 flex items-center justify-between rounded-lg border border-lime-200 bg-lime-50 px-3 py-1.5">
+
+              <p className="truncate text-[10px] font-semibold text-black">
+                {documentFile.name}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDocumentFile(null);
+
+                  const input =
+                    window.document.getElementById(
+                      "inward-document"
+                    );
+
+                  if (input) {
+                    input.value = "";
+                  }
+                }}
+                className="ml-3 flex items-center gap-1 text-[10px] font-bold text-red-500"
+              >
+                <X className="h-3 w-3" />
+                Remove
+              </button>
+
+            </div>
+          )}
+
+        </div>
+
+        {/* ===================================================
+            SAVE
+        =================================================== */}
+
+        <div className="mt-4 flex justify-end gap-2">
+
+          <button
+            type="button"
+            onClick={resetForm}
+            disabled={loading}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear
+          </button>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-1.5 rounded-lg bg-lime-500 px-5 py-2 text-xs font-bold text-black shadow-sm transition hover:bg-lime-400 disabled:opacity-50"
+          >
+            <Save className="h-3.5 w-3.5" />
+
+            {loading
+              ? "Saving..."
+              : "Save Inward Supply"}
+
+          </button>
+
+        </div>
+
       </form>
+
     </div>
   );
 }

@@ -21,6 +21,10 @@ import QualityInspection from "../pages/quality/QualityInspection";
 import Dispatch from "../pages/dispatch/Dispatch";
 
 import Items from "../pages/masters/Items";
+import Machines from "../pages/masters/Machines";
+import Operations from "../pages/Operations";
+import MachineDetails from "../pages/masters/MachineDetails";
+
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -32,14 +36,17 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+
 function AppRoutes() {
   return (
     <Routes>
-      {/* =========================
+
+      {/* =====================================================
           AUTHENTICATION ROUTES
-      ========================= */}
+      ===================================================== */}
 
       <Route element={<AuthLayout />}>
+
         <Route
           path="/login"
           element={<Login />}
@@ -49,11 +56,18 @@ function AppRoutes() {
           path="/signup"
           element={<Signup />}
         />
+
       </Route>
 
-      {/* =========================
-          PROTECTED DASHBOARD ROUTES
-      ========================= */}
+
+      {/* =====================================================
+          PROTECTED APPLICATION ROUTES
+
+          All routes inside this block automatically use:
+          - Sidebar
+          - Header
+          - DashboardLayout
+      ===================================================== */}
 
       <Route
         element={
@@ -62,7 +76,10 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* Dashboard */}
+
+        {/* =================================================
+            DASHBOARD
+        ================================================= */}
 
         <Route
           path="/"
@@ -79,27 +96,20 @@ function AppRoutes() {
           element={<Dashboard />}
         />
 
-        {/* =========================
-            MASTERS
-        ========================= */}
 
-        <Route
-          path="/items"
-          element={<Items />}
-        />
-
-        {/* =========================
-            VENDOR MANAGEMENT
-        ========================= */}
+        {/* =================================================
+            VENDOR
+        ================================================= */}
 
         <Route
           path="/vendors"
           element={<Vendors />}
         />
 
-        {/* =========================
+
+        {/* =================================================
             INWARD SUPPLY
-        ========================= */}
+        ================================================= */}
 
         <Route
           path="/process/inward"
@@ -111,9 +121,43 @@ function AppRoutes() {
           element={<InwardSupplyList />}
         />
 
-        {/* =========================
+
+        {/* =================================================
+            ITEMS
+        ================================================= */}
+
+        <Route
+          path="/items"
+          element={<Items />}
+        />
+
+
+        {/* =================================================
+            MACHINES
+        ================================================= */}
+
+        <Route
+          path="/machines"
+          element={<Machines />}
+        />
+<Route
+  path="/machines/:machineId"
+  element={<MachineDetails/>}
+/>
+
+        {/* =================================================
+            OPERATIONS
+        ================================================= */}
+
+        <Route
+          path="/operations"
+          element={<Operations />}
+        />
+
+
+        {/* =================================================
             PRODUCTION
-        ========================= */}
+        ================================================= */}
 
         <Route
           path="/process/production"
@@ -125,28 +169,33 @@ function AppRoutes() {
           element={<FinalProduction />}
         />
 
-        {/* =========================
+
+        {/* =================================================
             QUALITY INSPECTION
-        ========================= */}
+        ================================================= */}
 
         <Route
           path="/process/quality"
           element={<QualityInspection />}
         />
 
-        {/* =========================
+
+        {/* =================================================
             DISPATCH
-        ========================= */}
+        ================================================= */}
 
         <Route
           path="/process/dispatch"
           element={<Dispatch />}
         />
+
       </Route>
 
-      {/* =========================
+
+
+      {/* =====================================================
           UNKNOWN ROUTE
-      ========================= */}
+      ===================================================== */}
 
       <Route
         path="*"
@@ -157,8 +206,10 @@ function AppRoutes() {
           />
         }
       />
+
     </Routes>
   );
 }
+
 
 export default AppRoutes;

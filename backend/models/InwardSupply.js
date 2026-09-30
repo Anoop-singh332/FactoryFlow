@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const inwardSupplySchema = new mongoose.Schema(
   {
+    batchNo: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     vendorName: {
       type: String,
       required: true,
@@ -14,9 +21,16 @@ const inwardSupplySchema = new mongoose.Schema(
       trim: true,
     },
 
-    materialWeight: {
+    numberOfItems: {
       type: Number,
       required: true,
+      min: 1,
+    },
+
+    materialWeight: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
     materialSize: {
@@ -56,10 +70,10 @@ const inwardSupplySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model(
   "InwardSupply",
-  inwardSupplySchema
+  inwardSupplySchema,
 );

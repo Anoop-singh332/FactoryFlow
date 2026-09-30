@@ -1,44 +1,37 @@
 const Production = require("../models/Production");
 
-// Create production
 const createProduction = async (req, res) => {
   try {
     const {
-      itemName,
-      productionProcess,
-      numberOfPieces,
-      operator,
-      machine,
-      productionDate,
-      shift,
-      status,
-      notes,
+      machineNumber,
+      productionCount,
     } = req.body;
 
     if (
-      !itemName ||
-      !productionProcess ||
-      !numberOfPieces ||
-      !operator ||
-      !productionDate
+      !machineNumber ||
+      productionCount === undefined ||
+      productionCount === null
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "All required production fields must be filled.",
+          "Machine number and production count are required.",
+      });
+    }
+
+    const count = Number(productionCount);
+
+    if (!Number.isFinite(count) || count < 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Production count must be a valid number.",
       });
     }
 
     const production = await Production.create({
-      itemName,
-      productionProcess,
-      numberOfPieces,
-      operator,
-      machine: machine || "",
-      productionDate,
-      shift: shift || "",
-      status: status || "In Progress",
-      notes: notes || "",
+      machineNumber: machineNumber.trim(),
+      productionCount: count,
       createdBy: req.user?._id || null,
     });
 
@@ -51,7 +44,7 @@ const createProduction = async (req, res) => {
   } catch (error) {
     console.error(
       "Create Production Error:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -63,18 +56,16 @@ const createProduction = async (req, res) => {
   }
 };
 
-// Get all production
 const getProductions = async (req, res) => {
   try {
-    const productions =
-      await Production.find()
-        .populate(
-          "createdBy",
-          "name email role"
-        )
-        .sort({
-          createdAt: -1,
-        });
+    const productions = await Production.find()
+      .populate(
+        "createdBy",
+        "name email role",
+      )
+      .sort({
+        createdAt: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -84,7 +75,7 @@ const getProductions = async (req, res) => {
   } catch (error) {
     console.error(
       "Get Productions Error:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -96,15 +87,14 @@ const getProductions = async (req, res) => {
   }
 };
 
-// Get single production
 const getProduction = async (req, res) => {
   try {
     const production =
       await Production.findById(
-        req.params.id
+        req.params.id,
       ).populate(
         "createdBy",
-        "name email role"
+        "name email role",
       );
 
     if (!production) {
@@ -122,7 +112,7 @@ const getProduction = async (req, res) => {
   } catch (error) {
     console.error(
       "Get Production Error:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -134,24 +124,16 @@ const getProduction = async (req, res) => {
   }
 };
 
-// Update production
 const updateProduction = async (req, res) => {
   try {
     const {
-      itemName,
-      productionProcess,
-      numberOfPieces,
-      operator,
-      machine,
-      productionDate,
-      shift,
-      status,
-      notes,
+      machineNumber,
+      productionCount,
     } = req.body;
 
     const production =
       await Production.findById(
-        req.params.id
+        req.params.id,
       );
 
     if (!production) {
@@ -162,49 +144,31 @@ const updateProduction = async (req, res) => {
       });
     }
 
-    if (itemName !== undefined) {
-      production.itemName = itemName;
+    if (machineNumber !== undefined) {
+      if (!machineNumber.trim()) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Machine number cannot be empty.",
+        });
+      }
+
+      production.machineNumber =
+        machineNumber.trim();
     }
 
-    if (
-      productionProcess !== undefined
-    ) {
-      production.productionProcess =
-        productionProcess;
-    }
+    if (productionCount !== undefined) {
+      const count = Number(productionCount);
 
-    if (
-      numberOfPieces !== undefined
-    ) {
-      production.numberOfPieces =
-        numberOfPieces;
-    }
+      if (!Number.isFinite(count) || count < 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Production count must be a valid number.",
+        });
+      }
 
-    if (operator !== undefined) {
-      production.operator = operator;
-    }
-
-    if (machine !== undefined) {
-      production.machine = machine;
-    }
-
-    if (
-      productionDate !== undefined
-    ) {
-      production.productionDate =
-        productionDate;
-    }
-
-    if (shift !== undefined) {
-      production.shift = shift;
-    }
-
-    if (status !== undefined) {
-      production.status = status;
-    }
-
-    if (notes !== undefined) {
-      production.notes = notes;
+      production.productionCount = count;
     }
 
     const updatedProduction =
@@ -219,7 +183,7 @@ const updateProduction = async (req, res) => {
   } catch (error) {
     console.error(
       "Update Production Error:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -231,12 +195,11 @@ const updateProduction = async (req, res) => {
   }
 };
 
-// Delete production
 const deleteProduction = async (req, res) => {
   try {
     const production =
       await Production.findById(
-        req.params.id
+        req.params.id,
       );
 
     if (!production) {
@@ -257,7 +220,7 @@ const deleteProduction = async (req, res) => {
   } catch (error) {
     console.error(
       "Delete Production Error:",
-      error
+      error,
     );
 
     res.status(500).json({

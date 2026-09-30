@@ -1,50 +1,37 @@
 import {
   Boxes,
+  ChevronDown,
+  ChevronRight,
   ClipboardList,
   Factory,
-  FileBarChart,
+  FileText,
   LayoutDashboard,
   PackageCheck,
-  Settings,
+  Settings2,
   Truck,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-const processLinks = [
-  {
-    name: "Inward Supply",
-    path: "/process/inward",
-    icon: PackageCheck,
-  },
-  {
-    name: "Inward Supply List",
-    path: "/process/inward/list",
-    icon: ClipboardList,
-  },
-
-  
-  {
-    name: "Final Production",
-    path: "/process/final-production",
-    icon: Factory,
-  },
-  {
-    name: "Dispatch",
-    path: "/process/dispatch",
-    icon: Truck,
-  },
-];
-
 function Sidebar({ open, onClose }) {
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+
   const linkClass = ({ isActive }) =>
     `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
       isActive
         ? "bg-lime-50 text-black shadow-sm"
         : "text-black hover:bg-slate-50 hover:text-black"
     }`;
+
+  const staticLinkClass =
+    "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black transition hover:bg-slate-50 hover:text-black";
+
+  const invoiceSubLinkClass =
+    "ml-7 flex w-[calc(100%-1.75rem)] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-black";
 
   return (
     <>
@@ -98,109 +85,142 @@ function Sidebar({ open, onClose }) {
         {/* ================= NAVIGATION ================= */}
 
         <div className="flex-1 overflow-y-auto px-3 py-5">
-          {/* ================= WORKSPACE ================= */}
-
-          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-black">
-            Workspace
+          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            Main Menu
           </p>
 
-          <NavLink
-            to="/dashboard"
-            onClick={onClose}
-            className={linkClass}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Dashboard
-          </NavLink>
+          <div className="space-y-1">
+            {/* ================= 1. DASHBOARD ================= */}
 
-          {/* ================= PROCESS MANAGEMENT ================= */}
+            <NavLink to="/dashboard" onClick={onClose} className={linkClass}>
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </NavLink>
 
-          <div className="mt-6">
-            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-black">
-              Process Management
-            </p>
+            {/* ================= 2. VENDOR ================= */}
 
-            <div className="space-y-1">
-              {/* Vendors */}
+            <NavLink to="/vendors" onClick={onClose} className={linkClass}>
+              <Users className="h-4 w-4" />
+              Vendor
+            </NavLink>
 
-              <NavLink
-                to="/vendors"
-                onClick={onClose}
-                className={linkClass}
+            {/* ================= 3. INWARD SUPPLY ================= */}
+
+            <NavLink
+              to="/process/inward"
+              onClick={onClose}
+              className={linkClass}
+            >
+              <PackageCheck className="h-4 w-4" />
+              Inward Supply
+            </NavLink>
+
+            {/* ================= 4. INWARD SUPPLY LIST ================= */}
+
+            <NavLink
+              to="/process/inward/list"
+              onClick={onClose}
+              className={linkClass}
+            >
+              <ClipboardList className="h-4 w-4" />
+              Inward Supply List
+            </NavLink>
+
+            {/* ================= 5. ITEMS ================= */}
+
+            <NavLink to="/items" onClick={onClose} className={linkClass}>
+              <Boxes className="h-4 w-4" />
+              Items
+            </NavLink>
+
+           <NavLink
+  to="/machines"
+  onClick={onClose}
+  className={linkClass}
+>
+  <Wrench className="h-4 w-4" />
+  Machines
+</NavLink>
+
+            {/* ================= 7. OPERATIONS ================= */}
+
+            <NavLink to="/operations" onClick={onClose} className={linkClass}>
+              <ClipboardList className="h-4 w-4" />
+              Operations
+            </NavLink>
+
+            {/* ================= 8. DISPATCH ================= */}
+
+            <NavLink
+              to="/process/dispatch"
+              onClick={onClose}
+              className={linkClass}
+            >
+              <Truck className="h-4 w-4" />
+              Dispatch
+            </NavLink>
+
+            {/* ================= 9. INVOICE ================= */}
+
+            <div>
+              <button
+                type="button"
+                onClick={() => setInvoiceOpen((prev) => !prev)}
+                className={staticLinkClass}
               >
-                <Users className="h-4 w-4" />
-                Vendors
-              </NavLink>
+                <div className="flex items-center gap-3">
+                  <FileText className="h-4 w-4" />
 
-              {/* Process Links */}
+                  <span>Invoice</span>
+                </div>
 
-              {processLinks.map((item) => {
-                const Icon = item.icon;
+                {invoiceOpen ? (
+                  <ChevronDown className="ml-auto h-4 w-4" />
+                ) : (
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                )}
+              </button>
 
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={onClose}
-                    className={linkClass}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.name}
-                  </NavLink>
-                );
-              })}
-            </div>
-          </div>
+              {/* ================= INVOICE SUBTABS ================= */}
 
-          {/* ================= MANAGEMENT ================= */}
+              {invoiceOpen && (
+                <div className="mt-1 space-y-1">
+                  {/* Books */}
 
-          <div className="mt-6">
-            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-black">
-              Management
-            </p>
+                  <button type="button" className={invoiceSubLinkClass}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    Books
+                  </button>
 
-            <div className="space-y-1">
-              {/* Items */}
+                  {/* Inventory */}
 
-              <NavLink
-                to="/items"
-                onClick={onClose}
-                className={linkClass}
-              >
-                <Boxes className="h-4 w-4" />
-                Items
-              </NavLink>
+                  <button type="button" className={invoiceSubLinkClass}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    Inventory
+                  </button>
+
+                  {/* Consumables */}
+
+                  <button type="button" className={invoiceSubLinkClass}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    Consumables
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* ================= SYSTEM ================= */}
 
-          <div className="mt-6">
-            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-black">
+          <div className="mt-8">
+            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
               System
             </p>
 
-            <div className="space-y-1">
-              {/* Reports */}
-
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black transition hover:bg-slate-50 hover:text-black"
-              >
-                <FileBarChart className="h-4 w-4" />
-                Reports
-              </button>
-
-              {/* Settings */}
-
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black transition hover:bg-slate-50 hover:text-black"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </button>
-            </div>
+            <button type="button" className={staticLinkClass}>
+              <Settings2 className="h-4 w-4" />
+              Settings
+            </button>
           </div>
         </div>
 
@@ -216,9 +236,7 @@ function Sidebar({ open, onClose }) {
               </span>
             </div>
 
-            <p className="mt-2 text-[10px] text-black">
-              FactoryFlow v1.0
-            </p>
+            <p className="mt-2 text-[10px] text-black">FactoryFlow v1.0</p>
           </div>
         </div>
       </aside>

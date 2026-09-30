@@ -2,67 +2,28 @@ const mongoose = require("mongoose");
 
 const productionSchema = new mongoose.Schema(
   {
+    machineNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     itemName: {
       type: String,
       required: true,
       trim: true,
     },
 
-    productionProcess: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    numberOfPieces: {
+    productionCount: {
       type: Number,
       required: true,
-      min: 1,
+      min: 0,
     },
 
-    operator: {
-      type: String,
+    weight: {
+      type: Number,
       required: true,
-      trim: true,
-    },
-
-    machine: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-
-    productionDate: {
-      type: Date,
-      required: true,
-    },
-
-    shift: {
-      type: String,
-      enum: [
-        "Morning",
-        "Evening",
-        "Night",
-        "",
-      ],
-      default: "",
-    },
-
-    status: {
-      type: String,
-      enum: [
-        "Pending",
-        "In Progress",
-        "Completed",
-        "On Hold",
-      ],
-      default: "In Progress",
-    },
-
-    notes: {
-      type: String,
-      trim: true,
-      default: "",
+      min: 0,
     },
 
     createdBy: {
@@ -73,10 +34,10 @@ const productionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model(
   "Production",
-  productionSchema
+  productionSchema,
 );
