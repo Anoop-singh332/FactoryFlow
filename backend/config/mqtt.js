@@ -5,19 +5,22 @@ const MQTT_BROKER =
 
 const client = mqtt.connect(MQTT_BROKER, {
   protocolVersion: 5,
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD,
   reconnectPeriod: 5000,
 });
 
 client.on("connect", () => {
   console.log("✅ MQTT Connected");
 
+  // Subscribe to machine status
   client.subscribe(
     "factory/machines/+/status",
     { qos: 1 },
     (err) => {
       if (err) {
         console.error(
-          "❌ MQTT Subscribe Error:",
+          "❌ MQTT Status Subscribe Error:",
           err.message
         );
         return;
@@ -25,6 +28,25 @@ client.on("connect", () => {
 
       console.log(
         "📡 Subscribed to factory/machines/+/status"
+      );
+    }
+  );
+
+  // Subscribe to machine state response
+  client.subscribe(
+    "factory/machines/+/state",
+    { qos: 1 },
+    (err) => {
+      if (err) {
+        console.error(
+          "❌ MQTT State Subscribe Error:",
+          err.message
+        );
+        return;
+      }
+
+      console.log(
+        "📡 Subscribed to factory/machines/+/state"
       );
     }
   );
