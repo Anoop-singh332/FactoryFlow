@@ -9,47 +9,30 @@ const {
   getMachinePowerHistory,
   getAllMachines,
   createMachine,
+  updateMachineProduction,
+  getMachineProductionHistory,
 } = require("../controllers/machineController");
 
 const router = express.Router();
 
-// Get all machines
 router.get("/", getAllMachines);
 
-// Create machine
 router.post("/", createMachine);
 
-// Manual machine START / STOP control
 router.post("/control", controlMachine);
 
-// Machine permission ON / OFF
-router.post(
-  "/permission",
-  setMachinePermission
-);
+router.post("/permission", setMachinePermission);
 
-// Machine status
-router.get(
-  "/status/:machineId",
-  getMachineStatus
-);
+router.post("/production", updateMachineProduction);
 
-// Current machine state
-router.get(
-  "/state/:machineId",
-  getMachineState
-);
+router.get("/status/:machineId", getMachineStatus);
 
-// Machine status history
-router.get(
-  "/history/:machineId",
-  getMachineHistory
-);
+router.get("/state/:machineId", getMachineState);
 
-// Temporary compatibility endpoint
-router.get(
-  "/power-history/:machineId",
-  getMachinePowerHistory
-);
+router.get("/history/:machineId", getMachineHistory);
+
+router.get("/power-history/:machineId", getMachinePowerHistory);
+
+router.get("/production/:machineId", getMachineProductionHistory);
 
 module.exports = router;
